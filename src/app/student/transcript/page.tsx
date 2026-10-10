@@ -228,8 +228,28 @@ export default function StudentTranscriptPage() {
                   </table>
                 </div>
               </CardContent>
-            </Card>
           ))}
+        </div>
+
+        {/* Official University Seal & Signatures for Print */}
+        <div className="hidden print:flex items-center justify-between pt-16 mt-16 border-t-2 border-slate-800 text-xs">
+          <div className="text-center">
+            <div className="w-48 border-b border-slate-800 mb-1" />
+            <p className="font-bold text-slate-800">Office of the Registrar</p>
+            <p className="text-slate-500">Apex University Academic Affairs</p>
+          </div>
+          <div className="text-center">
+            <div className="h-20 w-20 mx-auto mb-1 rounded-full border-2 border-dashed border-indigo-700 flex flex-col items-center justify-center text-[9px] font-bold text-indigo-700 uppercase">
+              <span>Apex UMS</span>
+              <span className="text-[7px]">Official Seal</span>
+            </div>
+            <p className="text-[10px] text-slate-400">Security Verified</p>
+          </div>
+          <div className="text-center">
+            <div className="w-48 border-b border-slate-800 mb-1" />
+            <p className="font-bold text-slate-800">Controller of Examinations</p>
+            <p className="text-slate-500">Board of Academic Accreditation</p>
+          </div>
         </div>
       </div>
     </div>
