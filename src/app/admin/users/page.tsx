@@ -12,11 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/lib/api-client";
 import { formatDate, getStatusBadgeClasses } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 import { User, Role, UserStatus } from "@/types";
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedRole, setSelectedRole] = useState<string>("ALL");
 
   const { data: users, isLoading } = useQuery({
@@ -55,9 +57,9 @@ export default function AdminUsersPage() {
 
   const filtered = (users || []).filter((u) => {
     const matchesSearch =
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.profile?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.profile?.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+      u.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      u.profile?.firstName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      u.profile?.lastName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     const matchesRole = selectedRole === "ALL" || u.role === selectedRole;
     return matchesSearch && matchesRole;
   });
