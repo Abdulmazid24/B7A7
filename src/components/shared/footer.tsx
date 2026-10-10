@@ -108,7 +108,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-slate-100 dark:border-slate-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} {UNIVERSITY_NAME}. All rights reserved.</p>
+          <p>© 2026 {UNIVERSITY_NAME}. All rights reserved.</p>
           <p className="mt-2 sm:mt-0 font-mono">
             Powered by Next.js 16 • Prisma ORM • Neon PostgreSQL
           </p>

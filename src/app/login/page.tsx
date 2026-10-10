@@ -38,7 +38,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
@@ -239,3 +239,14 @@ export default function LoginPage() {
     </div>
   );
 }
+
+import { Suspense } from "react";
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-8 text-sm text-slate-500">Loading sign in portal...</div>}>
+      <LoginFormContent />
+    </Suspense>
+  );
+}
+

@@ -22,6 +22,8 @@ export const metadata = {
   description: "Browse academic faculties, credit hour requirements, prerequisites, and program syllabi.",
 };
 
+export const dynamic = "force-dynamic";
+
 async function getAcademicData() {
   try {
     const [deptRes, courseRes] = await Promise.all([
