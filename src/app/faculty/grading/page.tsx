@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getGradeBadgeClasses } from "@/lib/utils";
+import { calculateGrade } from "@/lib/grading";
 
 interface StudentMarkRow {
   studentId: string;
@@ -48,18 +49,6 @@ export default function FacultyGradingPage() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  const calculateGrade = (total: number): { letter: string; point: number } => {
-    if (total >= 80) return { letter: "A+", point: 4.0 };
-    if (total >= 75) return { letter: "A", point: 3.75 };
-    if (total >= 70) return { letter: "A-", point: 3.5 };
-    if (total >= 65) return { letter: "B+", point: 3.25 };
-    if (total >= 60) return { letter: "B", point: 3.0 };
-    if (total >= 55) return { letter: "B-", point: 2.75 };
-    if (total >= 50) return { letter: "C+", point: 2.5 };
-    if (total >= 45) return { letter: "C", point: 2.25 };
-    if (total >= 40) return { letter: "D", point: 2.0 };
-    return { letter: "F", point: 0.0 };
-  };
 
   const handleScoreChange = (
     index: number,
