@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth-store";
 import { DEMO_CREDENTIALS, UNIVERSITY_NAME } from "@/lib/constants";
+import { soundManager } from "@/lib/audio";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid academic email address"),
@@ -62,6 +63,7 @@ function LoginFormContent() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const user = await loginWithCredentials(data.email, data.password);
+      soundManager.playSuccessChime();
       toast.success(`Welcome back, ${user.profile?.firstName || user.email}!`);
 
       if (redirectUrl) {
@@ -83,6 +85,7 @@ function LoginFormContent() {
     setActiveDemoRole(role);
     try {
       const user = await loginWithDemoRole(role);
+      soundManager.playSuccessChime();
       toast.success(`Logged in successfully as Demo ${role.toUpperCase()}!`);
 
       if (redirectUrl) {
