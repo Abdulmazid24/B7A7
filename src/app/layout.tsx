@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://b7-a7-ums.vercel.app"),
   title: {
     default: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
     template: `%s | ${UNIVERSITY_NAME}`,
@@ -29,6 +30,21 @@ export const metadata: Metadata = {
     "Faculty Grading",
     "Higher Education ERP",
   ],
+  authors: [{ name: "Abdul Mazid" }],
+  creator: "Abdul Mazid",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://b7-a7-ums.vercel.app",
+    title: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
+    description: "Fullstack Higher Education ERP with Student Registration, Faculty Grading & Admin Controls.",
+    siteName: UNIVERSITY_NAME,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
+    description: "Enterprise University Management System built with Next.js 16, TypeScript & Tailwind CSS.",
+  },
 };
 
 export default function RootLayout({
