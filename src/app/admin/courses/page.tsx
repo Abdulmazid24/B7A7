@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/lib/api-client";
 import { Course, AcademicDepartment } from "@/types";
@@ -132,90 +133,86 @@ export default function AdminCoursesPage() {
         </div>
 
         {/* Modal for Adding Course */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
-            <Card className="max-w-md w-full shadow-2xl border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-lg">Add Course to Catalog</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      label="Course Code"
-                      id="code"
-                      placeholder="e.g. CSE201"
-                      error={errors.code?.message}
-                      {...register("code")}
-                    />
-                    <Input
-                      label="Credits"
-                      id="credits"
-                      type="number"
-                      placeholder="3"
-                      error={errors.credits?.message}
-                      {...register("credits")}
-                    />
-                  </div>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Add Course to Catalog"
+          description="Enter the course code, title, credits and department."
+        >
+          <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Course Code"
+                id="code"
+                placeholder="e.g. CSE201"
+                error={errors.code?.message}
+                {...register("code")}
+              />
+              <Input
+                label="Credits"
+                id="credits"
+                type="number"
+                placeholder="3"
+                error={errors.credits?.message}
+                {...register("credits")}
+              />
+            </div>
 
-                  <Input
-                    label="Course Title"
-                    id="title"
-                    placeholder="e.g. Database Systems"
-                    error={errors.title?.message}
-                    {...register("title")}
-                  />
+            <Input
+              label="Course Title"
+              id="title"
+              placeholder="e.g. Database Systems"
+              error={errors.title?.message}
+              {...register("title")}
+            />
 
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Academic Department
-                    </label>
-                    <select
-                      className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                      {...register("departmentId")}
-                    >
-                      <option value="">Select Department</option>
-                      {(departments || []).map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.code} - {d.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.departmentId && (
-                      <p className="text-xs text-rose-500">{errors.departmentId.message}</p>
-                    )}
-                  </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Academic Department
+              </label>
+              <select
+                className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                {...register("departmentId")}
+              >
+                <option value="">Select Department</option>
+                {(departments || []).map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.code} - {d.name}
+                  </option>
+                ))}
+              </select>
+              {errors.departmentId && (
+                <p className="text-xs text-rose-500">{errors.departmentId.message}</p>
+              )}
+            </div>
 
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Description (Optional)
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                      placeholder="Course overview and syllabus highlights..."
-                      {...register("description")}
-                    />
-                  </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Description (Optional)
+              </label>
+              <textarea
+                rows={3}
+                className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                placeholder="Course overview and syllabus highlights..."
+                {...register("description")}
+              />
+            </div>
 
-                  <div className="pt-2 flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" size="sm" isLoading={createMutation.isPending}>
-                      Save Course
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" isLoading={createMutation.isPending}>
+                Save Course
+              </Button>
+            </div>
+          </form>
+        </Modal>
 
         {/* Courses Grid */}
         {isCoursesLoading ? (

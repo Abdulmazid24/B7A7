@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/lib/api-client";
 import { AcademicDepartment } from "@/types";
@@ -128,61 +129,54 @@ export default function AdminDepartmentsPage() {
         </div>
 
         {/* Modal for Creating Department */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
-            <Card className="max-w-md w-full shadow-2xl border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-lg">Create Academic Department</CardTitle>
-                <CardDescription>
-                  Enter the official department title and unique code.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
-                  <Input
-                    label="Department Name"
-                    id="name"
-                    placeholder="e.g. Mechanical Engineering"
-                    error={errors.name?.message}
-                    {...register("name")}
-                  />
-                  <Input
-                    label="Department Code"
-                    id="code"
-                    placeholder="e.g. ME"
-                    error={errors.code?.message}
-                    {...register("code")}
-                  />
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Description (Optional)
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                      placeholder="Academic division scope and specializations..."
-                      {...register("description")}
-                    />
-                  </div>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Create Academic Department"
+          description="Enter the official department title and unique code."
+        >
+          <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
+            <Input
+              label="Department Name"
+              id="name"
+              placeholder="e.g. Mechanical Engineering"
+              error={errors.name?.message}
+              {...register("name")}
+            />
+            <Input
+              label="Department Code"
+              id="code"
+              placeholder="e.g. ME"
+              error={errors.code?.message}
+              {...register("code")}
+            />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Description (Optional)
+              </label>
+              <textarea
+                rows={3}
+                className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                placeholder="Academic division scope and specializations..."
+                {...register("description")}
+              />
+            </div>
 
-                  <div className="pt-2 flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" size="sm" isLoading={createMutation.isPending}>
-                      Save Department
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" isLoading={createMutation.isPending}>
+                Save Department
+              </Button>
+            </div>
+          </form>
+        </Modal>
 
         {/* Departments Table / Cards */}
         {isLoading ? (
