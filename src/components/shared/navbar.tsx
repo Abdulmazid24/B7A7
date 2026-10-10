@@ -114,7 +114,9 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
@@ -123,7 +125,12 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+        <div
+          id="mobile-navigation"
+          role="region"
+          aria-label="Mobile Navigation"
+          className="md:hidden border-b border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+        >
           <div className="flex flex-col space-y-2">
             {PUBLIC_NAV_LINKS.map((link) => (
               <Link

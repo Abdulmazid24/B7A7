@@ -58,7 +58,17 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 font-sans selection:bg-indigo-500/20 selection:text-indigo-600">
-        <QueryProvider>{children}</QueryProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Skip to main content
+        </a>
+        <QueryProvider>
+          <main id="main-content" className="flex-1 flex flex-col focus:outline-none">
+            {children}
+          </main>
+        </QueryProvider>
       </body>
     </html>
   );

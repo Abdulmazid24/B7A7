@@ -117,7 +117,7 @@ export function DashboardSidebar() {
         </div>
 
         {/* Navigation List */}
-        <div className="px-3 py-2 space-y-1">
+        <nav aria-label="Dashboard navigation" className="px-3 py-2 space-y-1">
           <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
             Navigation
           </p>
@@ -129,6 +129,7 @@ export function DashboardSidebar() {
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                   isActive
@@ -141,7 +142,7 @@ export function DashboardSidebar() {
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {/* Bottom Footer Actions */}
