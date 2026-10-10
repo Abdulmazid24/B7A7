@@ -1,3 +1,4 @@
+import { describe, test, expect } from "vitest";
 import { sanitizeInput, validatePasswordStrength, maskSensitiveEmail } from "../lib/security";
 
 describe("Security and Data Sanitization Utilities", () => {

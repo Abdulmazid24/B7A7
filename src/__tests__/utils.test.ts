@@ -1,3 +1,4 @@
+import { describe, test, expect } from "vitest";
 import { formatCurrency, formatDate, getStatusBadgeClasses, getGradeBadgeClasses } from "../lib/utils";
 
 describe("Formatting and Badge Styling Utility Functions", () => {

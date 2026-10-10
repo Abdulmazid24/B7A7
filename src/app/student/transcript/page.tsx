@@ -228,6 +228,7 @@ export default function StudentTranscriptPage() {
                   </table>
                 </div>
               </CardContent>
+            </Card>
           ))}
         </div>
 

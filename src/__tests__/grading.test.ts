@@ -1,3 +1,4 @@
+import { describe, test, expect } from "vitest";
 import { calculateGrade, calculateWeightedGPA } from "../lib/grading";
 
 describe("Academic Grading System (UGC 4.0 Standard Scale)", () => {
