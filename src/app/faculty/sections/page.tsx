@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, BookOpen, Clock, MapPin, Search, GraduationCap } from "lucide-react";
+import { Users, BookOpen, Clock, MapPin, Search, GraduationCap, Download } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
+import { exportToCSV } from "@/lib/export";
 import { CourseOffering } from "@/types";
 
 export default function FacultySectionsPage() {
@@ -51,6 +52,17 @@ export default function FacultySectionsPage() {
       status: "ENROLLED",
     },
   ];
+
+  const handleExportRoster = () => {
+    const rows = studentRoster.map((s) => ({
+      StudentID: s.studentId,
+      Name: s.name,
+      Email: s.email,
+      EnrolledAt: new Date(s.enrolledAt).toLocaleDateString(),
+      Status: s.status,
+    }));
+    exportToCSV(`Section_${selectedSectionId}_Student_Roster`, rows);
+  };
 
   return (
     <div className="flex-1 space-y-8 pb-12">
@@ -112,9 +124,20 @@ export default function FacultySectionsPage() {
                 Eligible students registered under ACID concurrency guarantees.
               </p>
             </div>
-            <Badge variant="outline" className="text-xs">
-              {studentRoster.length} Students Active
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportRoster}
+                className="gap-1.5 text-xs"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export Roster CSV
+              </Button>
+              <Badge variant="outline" className="text-xs">
+                {studentRoster.length} Students Active
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">

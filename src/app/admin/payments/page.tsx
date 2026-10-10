@@ -2,14 +2,16 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, Search, CheckCircle2, Clock, DollarSign, Receipt } from "lucide-react";
+import { CreditCard, Search, CheckCircle2, Clock, DollarSign, Receipt, Download } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { api } from "@/lib/api-client";
 import { formatCurrency, formatDate, getStatusBadgeClasses } from "@/lib/utils";
+import { exportToCSV } from "@/lib/export";
 import { PaymentRecord } from "@/types";
 
 export default function AdminPaymentsPage() {
@@ -34,6 +36,20 @@ export default function AdminPaymentsPage() {
     );
   });
 
+  const handleExportCSV = () => {
+    const rows = filtered.map((p) => ({
+      ID: p.id,
+      StudentName: `${p.student?.profile?.firstName || ""} ${p.student?.profile?.lastName || ""}`,
+      StudentEmail: p.student?.email || "",
+      Amount: p.amount,
+      Currency: p.currency,
+      Status: p.status,
+      StripeSessionId: p.stripeSessionId || "N/A",
+      Date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "N/A",
+    }));
+    exportToCSV("Apex_University_Payment_Ledger", rows);
+  };
+
   return (
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
@@ -54,9 +70,21 @@ export default function AdminPaymentsPage() {
             />
           </div>
 
-          <Badge variant="outline" className="text-xs">
-            {filtered.length} Recorded Transactions
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={filtered.length === 0}
+              className="gap-1.5 text-xs"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export CSV
+            </Button>
+            <Badge variant="outline" className="text-xs">
+              {filtered.length} Recorded Transactions
+            </Badge>
+          </div>
         </div>
 
         <Card className="border-slate-200/80 overflow-hidden">
