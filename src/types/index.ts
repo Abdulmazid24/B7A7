@@ -88,15 +88,29 @@ export interface CourseOffering {
   semester?: AcademicSemester;
   courseId: string;
   course?: Course;
-  sections: CourseSection[];
-  createdAt: string;
-  updatedAt: string;
+  sections?: CourseSection[];
+  sectionNumber?: number | string;
+  capacity?: number;
+  enrolledCount?: number;
+  scheduleTime?: string;
+  roomNumber?: string;
+  facultyId?: string | null;
+  faculty?: {
+    id?: string;
+    email?: string;
+    profile?: {
+      firstName: string;
+      lastName: string;
+    };
+  } | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CourseSection {
   id: string;
   offeringId: string;
-  sectionNumber: string;
+  sectionNumber: string | number;
   capacity: number;
   enrolledCount: number;
   schedule: string;
@@ -118,11 +132,13 @@ export interface CourseSection {
 
 export interface Enrollment {
   id: string;
-  studentId: string;
-  sectionId: string;
-  section: CourseSection;
-  status: "ENROLLED" | "COMPLETED" | "DROPPED" | "WITHDRAWN";
-  enrolledAt: string;
+  studentId?: string;
+  sectionId?: string;
+  section?: CourseSection;
+  courseOfferingId?: string;
+  courseOffering?: CourseOffering;
+  status?: "ENROLLED" | "COMPLETED" | "DROPPED" | "WITHDRAWN" | string;
+  enrolledAt?: string;
   droppedAt?: string | null;
 }
 

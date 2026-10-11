@@ -14,6 +14,12 @@ import {
   BookOpen,
   CalendarDays,
   FileCheck2,
+  Layers,
+  ShieldCheck,
+  CheckCircle2,
+  Activity,
+  ArrowUpRight,
+  Sparkles,
 } from "lucide-react";
 import {
   BarChart,
@@ -28,6 +34,7 @@ import {
 } from "recharts";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { StatCard } from "@/components/shared/stat-card";
+import { BentoActionCard } from "@/components/shared/bento-action-card";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,8 +81,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
-        title="University Operations & Analytics"
-        subtitle="Real-time institutional metrics aggregated from live Neon PostgreSQL database."
+        title="University Operations & Central Command"
+        subtitle="Real-time institutional metrics aggregated from live Neon PostgreSQL database and Stripe gateway."
         action={
           <div className="flex items-center gap-2">
             <Link href="/admin/departments">
@@ -95,6 +102,45 @@ export default function AdminDashboardPage() {
       />
 
       <div className="px-6 space-y-8">
+        {/* EXECUTIVE SYSTEM STATUS BANNER */}
+        <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-950 p-6 text-white shadow-xl dark:border-indigo-950">
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-emerald-400">
+                  Neon PostgreSQL Serverless • Live Sync
+                </span>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <span>Apex University Central Administration</span>
+                <Sparkles className="h-4 w-4 text-amber-300" />
+              </h3>
+              <p className="text-xs text-indigo-200/80 max-w-xl">
+                Active academic session Spring 2026. ACID concurrency lock active across 16 scheduled course offerings.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-md border border-white/10 text-right">
+                <p className="text-[10px] uppercase font-semibold text-indigo-200">Term Registration</p>
+                <p className="text-xs font-bold text-white flex items-center gap-1 justify-end">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>WINDOW OPEN</span>
+                </p>
+              </div>
+              <Link href="/admin/offerings">
+                <Button size="sm" className="bg-white text-indigo-950 hover:bg-indigo-50 font-semibold text-xs gap-1.5">
+                  <Layers className="h-3.5 w-3.5" />
+                  View Offerings
+                </Button>
+              </Link>
+            </div>
+          </div>
+          {/* Subtle background glow */}
+          <div className="absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
+        </div>
+
         {/* STAT CARDS ROW */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -137,17 +183,108 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
+        {/* BENTO ACTION HUB (ACTION LAUNCHER MATRIX) */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Central Management Hub</span>
+                <Badge variant="outline" className="text-[10px] font-mono border-indigo-200 text-indigo-700 bg-indigo-50">
+                  Quick Actions
+                </Badge>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Action-oriented launcher for primary administrative entities and academic workflows.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <BentoActionCard
+              title="Academic Departments"
+              description="Configure faculties, programs, and curriculum divisions"
+              href="/admin/departments"
+              icon={Building2}
+              gradientClass="from-indigo-500 to-indigo-600 shadow-indigo-500/25"
+              metrics={[
+                { label: "Active", value: stats.totalDepartments, color: "indigo" },
+                { label: "Divisions", value: "STEM & Business", color: "blue" },
+              ]}
+            />
+
+            <BentoActionCard
+              title="Course Catalog & Curricula"
+              description="Credit structures, prerequisite trees, and syllabi"
+              href="/admin/courses"
+              icon={BookOpen}
+              gradientClass="from-purple-500 to-violet-600 shadow-purple-500/25"
+              metrics={[
+                { label: "Courses", value: stats.totalCourses, color: "purple" },
+                { label: "Level", value: "Undergrad", color: "indigo" },
+              ]}
+            />
+
+            <BentoActionCard
+              title="Academic Semesters"
+              description="Manage terms, registration windows, and schedules"
+              href="/admin/semesters"
+              icon={CalendarDays}
+              gradientClass="from-blue-500 to-cyan-600 shadow-blue-500/25"
+              metrics={[
+                { label: "Current", value: "Spring 2026", color: "blue" },
+                { label: "Window", value: "OPEN", color: "emerald" },
+              ]}
+            />
+
+            <BentoActionCard
+              title="Section Offerings & Rooms"
+              description="Room allocations, seat capacities, and faculty staffing"
+              href="/admin/offerings"
+              icon={Layers}
+              gradientClass="from-amber-500 to-orange-600 shadow-amber-500/25"
+              metrics={[
+                { label: "Cap", value: "35 / Sec", color: "amber" },
+                { label: "ACID", value: "Protected", color: "emerald" },
+              ]}
+            />
+
+            <BentoActionCard
+              title="User Governance & RBAC"
+              description="Directory of Admin, Faculty, and Student accounts"
+              href="/admin/users"
+              icon={Users}
+              gradientClass="from-teal-500 to-emerald-600 shadow-teal-500/25"
+              metrics={[
+                { label: "Users", value: stats.totalUsers, color: "emerald" },
+                { label: "Students", value: stats.totalStudents, color: "indigo" },
+              ]}
+            />
+
+            <BentoActionCard
+              title="Tuition & Stripe Ledger"
+              description="Real-time audit trail of tuition fee payments"
+              href="/admin/payments"
+              icon={CreditCard}
+              gradientClass="from-emerald-500 to-green-600 shadow-emerald-500/25"
+              metrics={[
+                { label: "Collected", value: formatCurrency(stats.revenue.totalCollected), color: "emerald" },
+                { label: "Outstanding", value: formatCurrency(stats.revenue.totalOutstanding), color: "amber" },
+              ]}
+            />
+          </div>
+        </div>
+
         {/* CHARTS ROW (RECHARTS) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Department Distribution Chart */}
-          <Card className="border-slate-200/80 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Department Student Distribution</CardTitle>
-              <CardDescription>
+          <Card className="border-slate-200/80 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40">
+              <CardTitle className="text-sm font-bold">Department Student Distribution</CardTitle>
+              <CardDescription className="text-xs">
                 Comparison of active enrolled students and catalog courses by academic department.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.departmentDistribution}>
@@ -170,14 +307,14 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Revenue Ledger Chart */}
-          <Card className="border-slate-200/80 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Tuition Revenue & Accounts</CardTitle>
-              <CardDescription>
+          <Card className="border-slate-200/80 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40">
+              <CardTitle className="text-sm font-bold">Tuition Revenue & Accounts</CardTitle>
+              <CardDescription className="text-xs">
                 Breakdown of total semester assessed fees versus payments settled through Stripe.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueChartData} layout="vertical">
@@ -198,51 +335,6 @@ export default function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* QUICK MANAGEMENT LINKS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link href="/admin/departments" className="group">
-            <Card className="border-slate-200/80 hover:border-indigo-300 transition-all">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <h4 className="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    Academic Departments
-                  </h4>
-                  <p className="text-xs text-slate-500">Manage CSE, EEE, BBA curriculums</p>
-                </div>
-                <Building2 className="h-6 w-6 text-indigo-500 shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/admin/courses" className="group">
-            <Card className="border-slate-200/80 hover:border-indigo-300 transition-all">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <h4 className="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    Course & Prerequisites
-                  </h4>
-                  <p className="text-xs text-slate-500">Configure prerequisites & credits</p>
-                </div>
-                <BookOpen className="h-6 w-6 text-purple-500 shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/admin/payments" className="group">
-            <Card className="border-slate-200/80 hover:border-indigo-300 transition-all">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <h4 className="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    University Payments Ledger
-                  </h4>
-                  <p className="text-xs text-slate-500">Verify Stripe session transactions</p>
-                </div>
-                <CreditCard className="h-6 w-6 text-emerald-500 shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
         </div>
       </div>
     </div>
