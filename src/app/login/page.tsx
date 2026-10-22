@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,11 +31,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function LoginFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
 
   const [activeDemoRole, setActiveDemoRole] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const { loginWithCredentials, loginWithDemoRole, isLoading } = useAuthStore();
 
@@ -52,46 +52,42 @@ function LoginFormContent() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    if (isAuthenticating) return;
+    setIsAuthenticating(true);
     try {
       const user = await loginWithCredentials(data.email, data.password);
       soundManager.playSuccessChime();
       toast.success(`Welcome back, ${user.profile?.firstName || user.email}!`);
 
-      if (redirectUrl) {
-        router.push(redirectUrl);
-      } else if (user.role === "ADMIN") {
-        router.push("/admin");
-      } else if (user.role === "FACULTY") {
-        router.push("/faculty");
-      } else {
-        router.push("/student");
-      }
+      const destination = redirectUrl?.startsWith("/") && !redirectUrl.startsWith("//")
+        ? redirectUrl
+        : user.role === "ADMIN" ? "/admin" : user.role === "FACULTY" ? "/faculty" : "/student";
+      window.location.assign(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to sign in";
       toast.error(message);
+      setIsAuthenticating(false);
     }
   };
 
   const handleDemoLogin = async (role: "admin" | "faculty" | "student") => {
+    if (isAuthenticating) return;
+    setIsAuthenticating(true);
     setActiveDemoRole(role);
     try {
       await loginWithDemoRole(role);
       soundManager.playSuccessChime();
       toast.success(`Logged in successfully as Demo ${role.toUpperCase()}!`);
 
-      if (redirectUrl) {
-        router.push(redirectUrl);
-      } else if (role === "admin") {
-        router.push("/admin");
-      } else if (role === "faculty") {
-        router.push("/faculty");
-      } else {
-        router.push("/student");
-      }
+      const roleDashboard = role === "admin" ? "/admin" : role === "faculty" ? "/faculty" : "/student";
+      const destination = redirectUrl?.startsWith("/") && !redirectUrl.startsWith("//")
+        ? redirectUrl
+        : roleDashboard;
+      window.location.assign(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Demo sign in failed";
       toast.error(message);
-    } finally {
+      setIsAuthenticating(false);
       setActiveDemoRole(null);
     }
   };
@@ -142,6 +138,7 @@ function LoginFormContent() {
               type="button"
               variant="outline"
               onClick={() => handleDemoLogin("admin")}
+              disabled={isAuthenticating}
               isLoading={activeDemoRole === "admin"}
               className="flex-col h-auto py-3 px-3 border-purple-200 bg-white hover:bg-purple-50 text-purple-950 dark:bg-slate-900 dark:border-purple-900/50 dark:hover:bg-purple-950/40"
             >
@@ -157,6 +154,7 @@ function LoginFormContent() {
               type="button"
               variant="outline"
               onClick={() => handleDemoLogin("faculty")}
+              disabled={isAuthenticating}
               isLoading={activeDemoRole === "faculty"}
               className="flex-col h-auto py-3 px-3 border-blue-200 bg-white hover:bg-blue-50 text-blue-950 dark:bg-slate-900 dark:border-blue-900/50 dark:hover:bg-blue-950/40"
             >
@@ -172,6 +170,7 @@ function LoginFormContent() {
               type="button"
               variant="outline"
               onClick={() => handleDemoLogin("student")}
+              disabled={isAuthenticating}
               isLoading={activeDemoRole === "student"}
               className="flex-col h-auto py-3 px-3 border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-950 dark:bg-slate-900 dark:border-emerald-900/50 dark:hover:bg-emerald-950/40"
             >
@@ -216,7 +215,7 @@ function LoginFormContent() {
                 />
               </div>
 
-              <Button type="submit" className="w-full gap-2 mt-2" isLoading={isLoading && !activeDemoRole}>
+              <Button type="submit" className="w-full gap-2 mt-2" isLoading={isLoading && !activeDemoRole} disabled={isAuthenticating}>
                 Sign In to Portal
                 <ArrowRight className="h-4 w-4" />
               </Button>
