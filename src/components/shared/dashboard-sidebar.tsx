@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GraduationCap, LayoutDashboard, Building2, CalendarDays, BookOpen, Layers, Users, Receipt, Award, PlusCircle, FileText, CreditCard, LogOut, Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -32,9 +32,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleSignOut = () => {
+    logout();
+    setIsMobileNavOpen(false);
+    router.replace("/login");
+  };
 
   const role = user?.role || "STUDENT";
   const links =
@@ -165,12 +172,13 @@ export function DashboardSidebar() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => { logout(); setIsMobileNavOpen(false); }}
-          title={isCollapsed ? "Sign Out" : undefined}
+          onClick={handleSignOut}
+          title={isCollapsed ? "Sign out" : undefined}
+          aria-label={isCollapsed ? "Sign out" : undefined}
           className={cn("w-full justify-start gap-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40", isCollapsed && "lg:justify-center lg:px-2")}
         >
           <LogOut className="h-3.5 w-3.5" />
-          <span className={cn(isCollapsed && "lg:sr-only")}>Sign Out</span>
+          <span className={cn(isCollapsed && "lg:sr-only")}>Sign out</span>
         </Button>
       </div>
       </div>

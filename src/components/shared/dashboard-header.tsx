@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,13 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle, action }: DashboardHeaderProps) {
+  const router = useRouter();
   const { logout } = useAuthStore();
+
+  const handleSignOut = () => {
+    logout();
+    router.replace("/login");
+  };
 
   return (
     <header className="sticky top-0 z-30 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:min-h-16 sm:flex-row sm:items-center sm:py-2 sm:px-6">
@@ -41,11 +48,12 @@ export function DashboardHeader({ title, subtitle, action }: DashboardHeaderProp
           <Button
             variant="ghost"
             size="sm"
-            onClick={logout}
-            className="text-xs text-slate-500 hover:text-rose-600 gap-1 hidden sm:flex"
+            onClick={handleSignOut}
+            aria-label="Sign out"
+            className="hidden gap-1 text-xs text-slate-600 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-300 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 sm:flex"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Logout
+            Sign out
           </Button>
         </div>
       </div>
