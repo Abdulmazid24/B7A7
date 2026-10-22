@@ -25,8 +25,8 @@ export function StatCard({
     <Card className="overflow-hidden relative">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="min-w-0">
+            <p className="break-words text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
               {title}
             </p>
             <h4 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">

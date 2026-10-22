@@ -229,7 +229,7 @@ export default function AdminDepartmentsPage() {
                   </p>
                   <div className="pt-3 border-t flex items-center justify-between text-slate-400 font-mono text-[10px]">
                     <span>ID: {dept.id.slice(0, 8)}...</span>
-                    <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-50">
+                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200">
                       Active
                     </Badge>
                   </div>

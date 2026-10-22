@@ -45,11 +45,11 @@ export function BentoActionCard({
 
   return (
     <div className="group relative rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-indigo-500/50">
-      <Link href={href} className="flex items-center gap-4">
+      <Link href={href} className="flex min-w-0 items-center gap-3 sm:gap-4">
         {/* Left Gradient Icon Container */}
         <div
           className={cn(
-            "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr shadow-lg transition-transform duration-300 group-hover:scale-105",
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr shadow-lg transition-transform duration-300 group-hover:scale-105 sm:h-14 sm:w-14",
             gradientClass
           )}
         >
@@ -57,9 +57,9 @@ export function BentoActionCard({
         </div>
 
         {/* Center Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h4 className="truncate text-sm font-bold text-slate-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h4 className="min-w-0 break-words text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
               {title}
             </h4>
             {badgeText && (
@@ -68,25 +68,25 @@ export function BentoActionCard({
               </span>
             )}
           </div>
-          <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400">
             {description}
           </p>
 
           {/* Quick Metrics Row */}
           {metrics && metrics.length > 0 && (
-            <div className="mt-2.5 flex items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               {metrics.map((m, idx) => {
                 const color = m.color || "indigo";
                 return (
                   <div
                     key={idx}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[11px] font-semibold",
+                      "flex max-w-full flex-wrap items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold leading-tight",
                       metricColorMap[color]
                     )}
                   >
-                    <span className="opacity-75">{m.label}:</span>
-                    <span>{m.value}</span>
+                    <span>{m.label}:</span>
+                    <span className="break-words">{m.value}</span>
                   </div>
                 );
               })}

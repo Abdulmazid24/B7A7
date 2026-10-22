@@ -12,6 +12,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Raise the contrast of muted copy on both light and dark surfaces. */
+@layer utilities {
+  .text-slate-400 {
+    color: #475569;
+  }
+
+  .text-slate-500 {
+    color: #475569;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .text-slate-400,
+    .text-slate-500,
+    [class~="dark:text-slate-400"],
+    [class~="dark:text-slate-500"] {
+      color: #cbd5e1;
+    }
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

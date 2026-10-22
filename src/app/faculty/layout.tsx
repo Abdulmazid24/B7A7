@@ -14,7 +14,7 @@ export default function FacultyLayout({
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 lg:flex-row">
       <DashboardSidebar />
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <main className="min-w-0 flex-1 flex flex-col overflow-x-hidden overflow-y-auto">
         {children}
       </main>
     </div>
