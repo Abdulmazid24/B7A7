@@ -23,7 +23,7 @@ Project Name            : University Management System (UMS)
 Backend Repo            : https://github.com/Abdulmazid24/B7A6.git
 Frontend Repo           : https://github.com/Abdulmazid24/B7A7.git
 Live Backend URL        : https://b7-a6-kohl.vercel.app
-Live Frontend URL       : https://b7-a7-ums.vercel.app
+Live Frontend URL       : https://b7-a7-lac.vercel.app
 API Documentation       : https://documenter.getpostman.com/view/58861661/2sBYHQ2i1P
 Demo Video              : https://www.loom.com/share/placeholder
 Demo Admin Email        : admin@university.edu
