@@ -24,7 +24,7 @@ export const DEMO_CREDENTIALS = {
     password: "StudentPassword123!",
     role: "STUDENT" as const,
     label: "Student Portal",
-    description: "Enroll in courses, view official transcript CGPA, and pay tuition via Stripe.",
+    description: "Enroll in courses, view academic records, and pay tuition via Stripe.",
   },
 };
 

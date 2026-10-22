@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import Cookies from "js-cookie";
-import { User, Role } from "@/types";
+import { User } from "@/types";
 import { api } from "@/lib/api-client";
 import { DEMO_CREDENTIALS } from "@/lib/constants";
 

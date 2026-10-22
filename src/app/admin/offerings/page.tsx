@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Layers, Plus, Users, Calendar, MapPin, CheckCircle, Clock } from "lucide-react";
+import { Users, MapPin, Clock } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { QueryErrorState } from "@/components/shared/query-error-state";
 import { api } from "@/lib/api-client";
 import { CourseOffering } from "@/types";
 
 export default function AdminOfferingsPage() {
-  const { data: offerings, isLoading } = useQuery({
+  const { data: offerings, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "course-offerings"],
     queryFn: async () => {
       const res = await api.get<CourseOffering[]>("/course-offerings");
@@ -35,6 +35,8 @@ export default function AdminOfferingsPage() {
               <Skeleton key={i} className="h-44 rounded-xl" />
             ))}
           </div>
+        ) : isError ? (
+          <QueryErrorState title="Course offerings could not be loaded" onRetry={() => void refetch()} />
         ) : (offerings || []).length === 0 ? (
           <EmptyState
             title="No Course Offerings Scheduled"
@@ -66,6 +68,9 @@ export default function AdminOfferingsPage() {
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                       Scheduled Sections ({offering.sections?.length || 0})
                     </h4>
+                    {(offering.sections || []).length === 0 ? (
+                      <EmptyState title="No sections configured" description="Add a section to this course offering to assign a room, schedule, capacity, and faculty member." />
+                    ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {(offering.sections || []).map((sec) => (
                         <div
@@ -102,6 +107,7 @@ export default function AdminOfferingsPage() {
                         </div>
                       ))}
                     </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

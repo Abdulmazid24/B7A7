@@ -1,23 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, Search, CheckCircle2, Clock, DollarSign, Receipt, Download } from "lucide-react";
+import { Search, Receipt, Download } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { QueryErrorState } from "@/components/shared/query-error-state";
 import { api } from "@/lib/api-client";
 import { formatCurrency, formatDate, getStatusBadgeClasses } from "@/lib/utils";
 import { exportToCSV } from "@/lib/export";
 import { PaymentRecord } from "@/types";
+import { useUrlSearchParam } from "@/lib/use-url-search-param";
 
 export default function AdminPaymentsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useUrlSearchParam("q");
 
-  const { data: payments, isLoading } = useQuery({
+  const { data: payments, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "payments"],
     queryFn: async () => {
       const res = await api.get<PaymentRecord[]>("/payments?limit=50");
@@ -47,14 +49,14 @@ export default function AdminPaymentsPage() {
       StripeSessionId: p.stripeSessionId || "N/A",
       Date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "N/A",
     }));
-    exportToCSV("Apex_University_Payment_Ledger", rows);
+    exportToCSV("university_payment_ledger", rows);
   };
 
   return (
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
         title="University Payment Transactions & Ledger"
-        subtitle="Live audit trail of all tuition fee payments and webhook captures from Stripe Gateway."
+        subtitle="Review recorded tuition payment transactions and export the current result set."
       />
 
       <div className="px-6 space-y-6">
@@ -63,6 +65,7 @@ export default function AdminPaymentsPage() {
             <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
+              aria-label="Search payments by student, email, or Stripe ID"
               placeholder="Search by student, email, or Stripe ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -91,7 +94,7 @@ export default function AdminPaymentsPage() {
           <CardHeader className="py-4 px-6 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold">Stripe Payment Ledger</CardTitle>
-              <span className="text-xs text-slate-500">Live Webhook Verified</span>
+              <span className="text-xs text-slate-500">Payment ledger</span>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -101,10 +104,12 @@ export default function AdminPaymentsPage() {
                   <Skeleton key={i} className="h-12 w-full rounded-lg" />
                 ))}
               </div>
+            ) : isError ? (
+              <QueryErrorState title="Payment records could not be loaded" onRetry={() => void refetch()} />
             ) : filtered.length === 0 ? (
               <EmptyState
                 title="No Payments Recorded"
-                description="Tuition payments made by students via Stripe will appear here in real-time."
+                description="Stripe tuition transactions will appear here after the backend records them."
                 icon={Receipt}
               />
             ) : (
@@ -112,12 +117,12 @@ export default function AdminPaymentsPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider dark:bg-slate-900 dark:border-slate-800">
                     <tr>
-                      <th className="py-3 px-6">Transaction ID</th>
-                      <th className="py-3 px-6">Student</th>
-                      <th className="py-3 px-6">Amount</th>
-                      <th className="py-3 px-6">Method</th>
-                      <th className="py-3 px-6">Status</th>
-                      <th className="py-3 px-6">Captured Date</th>
+                      <th scope="col" className="py-3 px-6">Transaction ID</th>
+                      <th scope="col" className="py-3 px-6">Student</th>
+                      <th scope="col" className="py-3 px-6">Amount</th>
+                      <th scope="col" className="py-3 px-6">Method</th>
+                      <th scope="col" className="py-3 px-6">Status</th>
+                      <th scope="col" className="py-3 px-6">Captured Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

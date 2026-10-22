@@ -2,48 +2,46 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, CheckCircle2, AlertCircle, Clock, ShieldCheck, ArrowRight, DollarSign } from "lucide-react";
+import { CreditCard, CheckCircle2, AlertCircle, ShieldCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { formatCurrency, formatDate, getStatusBadgeClasses } from "@/lib/utils";
 import { TuitionFee } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function StudentInvoicesPage() {
   const [isProcessingStripe, setIsProcessingStripe] = useState<string | null>(null);
 
-  const { data: invoices, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["student", "invoices"],
     queryFn: async () => {
-      try {
-        const res = await api.get<{ tuitionFees: TuitionFee[] }>("/payments/my-invoices");
-        return res.data?.tuitionFees || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get<{ tuitionFees: TuitionFee[] }>("/payments/my-invoices");
+      return res.data.tuitionFees;
     },
   });
+  const invoices = data ?? [];
 
   const handlePayViaStripe = async (tuitionFeeId: string) => {
     setIsProcessingStripe(tuitionFeeId);
     try {
-      toast.info("Generating secure Stripe Checkout Session with webhook listener...");
-      const res = await api.post<{ url: string; sessionId: string }>(
+      toast.info("Preparing Stripe Checkout...");
+      const res = await api.post<{ checkoutUrl: string | null; sessionId: string }>(
         "/payments/create-checkout-session",
         {
           tuitionFeeId,
         }
       );
 
-      if (res.data?.url) {
+      if (res.data?.checkoutUrl) {
         toast.success("Redirecting to Stripe Gateway...");
-        window.location.href = res.data.url;
+        window.location.assign(res.data.checkoutUrl);
       } else {
-        toast.success("Payment initiated! Session registered in Stripe Test Mode.");
+        throw new Error("Stripe did not return a checkout URL. Please try again.");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Stripe checkout session failed";
@@ -53,36 +51,6 @@ export default function StudentInvoicesPage() {
       setIsProcessingStripe(null);
     }
   };
-
-  // Demo fallback invoice if user hasn't enrolled yet
-  const displayInvoices: TuitionFee[] =
-    (invoices && invoices.length > 0)
-      ? invoices
-      : [
-          {
-            id: "tf-demo-001",
-            studentId: "stu-1",
-            semesterId: "sem-1",
-            semester: {
-              id: "sem-1",
-              name: "Fall 2026",
-              year: 2026,
-              code: "FL26",
-              startDate: "2026-09-01",
-              endDate: "2026-12-30",
-              isCurrent: true,
-              isRegistrationOpen: true,
-              createdAt: "",
-              updatedAt: "",
-            },
-            totalAmount: 1800,
-            paidAmount: 0,
-            dueAmount: 1800,
-            status: "UNPAID",
-            dueDate: "2026-11-15T00:00:00.000Z",
-            createdAt: "2026-10-08T16:59:29.737Z",
-          },
-        ];
 
   return (
     <div className="flex-1 space-y-8 pb-12">
@@ -97,7 +65,7 @@ export default function StudentInvoicesPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
             <span>
-              End-to-End Encrypted: Powered by Stripe SDK. Instant invoice settlement via webhook events.
+              Payments are processed through Stripe Checkout. Invoice status updates after backend verification.
             </span>
           </div>
           <Badge variant="outline" className="text-[10px] bg-white border-emerald-300 text-emerald-700">
@@ -107,7 +75,25 @@ export default function StudentInvoicesPage() {
 
         {/* Invoice Cards */}
         <div className="space-y-4">
-          {displayInvoices.map((inv) => (
+          {isLoading ? (
+            <div className="space-y-3" aria-label="Loading invoices">
+              {[0, 1].map((item) => <Skeleton key={item} className="h-32 w-full rounded-xl" />)}
+            </div>
+          ) : isError ? (
+            <EmptyState
+              title="Invoices could not be loaded"
+              description={error instanceof Error ? error.message : "Please check your connection and try again."}
+              icon={AlertCircle}
+              actionLabel="Retry"
+              onAction={() => void refetch()}
+            />
+          ) : invoices.length === 0 ? (
+            <EmptyState
+              title="No tuition invoices yet"
+              description="Invoices will appear here after the university assesses your registered courses."
+              icon={CreditCard}
+            />
+          ) : invoices.map((inv) => (
             <Card key={inv.id} className="border-slate-200/80 overflow-hidden shadow-sm">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { Bell, Search, Shield, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
@@ -14,12 +13,12 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle, action }: DashboardHeaderProps) {
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
 
   return (
-    <header className="sticky top-0 z-40 h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md px-6 flex items-center justify-between dark:border-slate-800 dark:bg-slate-950/90">
-      <div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+    <header className="sticky top-0 z-30 flex flex-col justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:min-h-16 sm:flex-row sm:items-center sm:py-2 sm:px-6">
+      <div className="min-w-0">
+        <h1 className="text-base font-bold leading-tight text-slate-900 dark:text-white sm:text-lg">
           {title}
         </h1>
         {subtitle && (
@@ -34,10 +33,9 @@ export function DashboardHeader({ title, subtitle, action }: DashboardHeaderProp
 
         <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs py-1 px-2.5 bg-slate-50">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block mr-1.5 animate-pulse" />
-            Live Backend Connected
+      <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+          <Badge variant="outline" className="hidden bg-slate-50 px-2.5 py-1 text-xs sm:inline-flex">
+            Academic workspace
           </Badge>
 
           <Button

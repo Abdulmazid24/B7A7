@@ -3,20 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  GraduationCap,
-  Users,
-  Award,
-  Calendar,
-  Clock,
-  MapPin,
-  ArrowRight,
-  BookOpen,
-  Layers,
-  Sparkles,
-  CheckCircle2,
-  FileCheck2,
-} from "lucide-react";
+import { Users, Award, Clock, MapPin, ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { BentoActionCard } from "@/components/shared/bento-action-card";
@@ -27,17 +14,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/auth-store";
 import { api } from "@/lib/api-client";
 import { CourseOffering } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function FacultyOverviewPage() {
   const { user } = useAuthStore();
 
-  const { data: offerings, isLoading } = useQuery({
-    queryKey: ["faculty", "my-offerings"],
+  const { data: offerings = [], isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["faculty", "my-offerings", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const res = await api.get<CourseOffering[]>("/course-offerings");
+      const res = await api.get<CourseOffering[]>("/course-offerings", { facultyId: user!.id, limit: 100 });
       return res.data;
     },
   });
+  const sections = offerings.flatMap((offering) => (offering.sections ?? [])
+    .filter((section) => section.facultyId === user?.id)
+    .map((section) => ({ offering, section })));
+  const studentCount = sections.reduce((total, { section }) => total + (section.enrolledCount ?? 0), 0);
+  const currentSemester = offerings.find((offering) => offering.semester?.isCurrent)?.semester?.name ?? "Current term";
+  const departmentName = user?.profile?.department?.name ?? "your department";
 
   return (
     <div className="flex-1 space-y-8 pb-12">
@@ -54,11 +49,11 @@ export default function FacultyOverviewPage() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-emerald-400">
-                  Active Faculty Appointment • Department of CSE
+                  Faculty Account • {departmentName}
                 </span>
               </div>
               <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>Spring 2026 Academic Instruction Hub</span>
+                <span>{currentSemester} Academic Instruction Hub</span>
                 <Sparkles className="h-4 w-4 text-amber-300" />
               </h3>
               <p className="text-xs text-blue-200/80 max-w-xl">
@@ -82,22 +77,22 @@ export default function FacultyOverviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <StatCard
             title="Assigned Sections"
-            value={(offerings || []).length || 2}
+            value={sections.length}
             description="Active teaching assignments"
             icon={BookOpen}
             iconColor="text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400"
           />
           <StatCard
             title="Total Enrolled Students"
-            value="48"
+            value={studentCount}
             description="Across active course sections"
             icon={Users}
             iconColor="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-400"
           />
           <StatCard
             title="Grading Matrix Status"
-            value="Term Open"
-            description="Publish directly to student transcripts"
+            value={currentSemester}
+            description="Current assigned teaching term"
             icon={Award}
             iconColor="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400"
           />
@@ -125,7 +120,7 @@ export default function FacultyOverviewPage() {
               icon={Users}
               gradientClass="from-blue-500 to-indigo-600 shadow-blue-500/25"
               metrics={[
-                { label: "Active", value: "3 Enrolled", color: "blue" },
+                { label: "Active", value: `${studentCount} Enrolled`, color: "blue" },
                 { label: "CSV Export", value: "Enabled", color: "emerald" },
               ]}
             />
@@ -138,7 +133,7 @@ export default function FacultyOverviewPage() {
               gradientClass="from-emerald-500 to-teal-600 shadow-emerald-500/25"
               metrics={[
                 { label: "Scale", value: "UGC 4.0", color: "emerald" },
-                { label: "Sync", value: "Live Transcripts", color: "indigo" },
+                { label: "Records", value: "Published Grades", color: "indigo" },
               ]}
             />
           </div>
@@ -169,33 +164,37 @@ export default function FacultyOverviewPage() {
                   <Skeleton key={i} className="h-20 w-full rounded-xl" />
                 ))}
               </div>
+            ) : isError ? (
+              <EmptyState title="Teaching schedule could not be loaded" description={error instanceof Error ? error.message : "Please retry."} icon={BookOpen} actionLabel="Retry" onAction={() => void refetch()} />
+            ) : sections.length === 0 ? (
+              <EmptyState title="No assigned sections" description="Course sections assigned to your account will appear here." icon={BookOpen} />
             ) : (
               <div className="space-y-4">
-                {(offerings || []).slice(0, 3).map((offering) => (
+                {sections.slice(0, 6).map(({ offering, section }) => (
                   <div
-                    key={offering.id}
+                    key={section.id}
                     className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4 dark:border-slate-800 dark:bg-slate-900/40"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="font-mono text-xs">
-                          {offering.course?.code || "CSE101"}
+                          {offering.course?.code || "Course"}
                         </Badge>
                         <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {offering.course?.title || "Database Systems"}
+                          {offering.course?.title || "Course title unavailable"}
                         </h4>
                         <Badge variant="outline" className="text-[10px]">
-                          Section {offering.sectionNumber || 1}
+                          Section {section.sectionNumber}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
                         <span className="flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5 text-slate-400" />
-                          {offering.scheduleTime || "Sun, Tue 10:00 AM - 11:30 AM"}
+                          {section.schedule || "Schedule not set"}
                         </span>
                         <span className="flex items-center gap-1.5">
                           <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                          {offering.roomNumber || "Building 3, Room 402"}
+                          {section.room || "Room not set"}
                         </span>
                       </div>
                     </div>

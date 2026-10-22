@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { XCircle, ArrowRight, RefreshCw, CreditCard } from "lucide-react";
+import { XCircle, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,11 @@ export default function PaymentCancelPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
                 Payment Interrupted
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Transaction Cancelled
-              </h2>
+              </h1>
               <p className="text-xs text-slate-500">
-                The Stripe Checkout session was cancelled or timed out. No amount has been deducted from your card.
+                The Stripe Checkout session was cancelled or timed out. Check your invoice status before starting another payment.
               </p>
             </div>
 

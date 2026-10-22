@@ -2,12 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, HelpCircle, ArrowRight, BookOpen } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UNIVERSITY_NAME } from "@/lib/constants";
 
 const FAQS = [
   {
@@ -20,7 +19,7 @@ const FAQS = [
     category: "Academic & Course Registration",
     question: "What are prerequisite requirements and how are they enforced?",
     answer:
-      "Advanced courses (such as Database Systems or Advanced Algorithms) require prerequisite course completion. The system checks your academic transcript history—if you have not successfully completed the prerequisite with a passing letter grade (C or higher), registration is blocked automatically.",
+      "Courses with prerequisites require you to complete those courses first. The backend checks published enrollment and grade records, and blocks registration when the prerequisite has not been passed.",
   },
   {
     category: "Grading & Transcripts",
@@ -32,13 +31,13 @@ const FAQS = [
     category: "Tuition Billing & Stripe",
     question: "How does online tuition payment work with Stripe?",
     answer:
-      "When you enroll in a semester course, tuition is assessed automatically ($150 per credit hour). In the Student Portal, click 'Pay via Stripe'—our server generates an official Stripe Checkout Session. Upon completing payment, Stripe fires an asynchronous Webhook event to mark your invoice status as PAID and update the university ledger instantly.",
+      "When you register for a course, the backend assesses tuition at its configured rate of $500 per credit. Invoices show the current balance, and Stripe Checkout confirms completed payments through a signed webhook or a server-side session verification.",
   },
   {
     category: "User Roles & Evaluation",
     question: "How do evaluators test the 3 distinct roles in this project?",
     answer:
-      "The Login page (/login) features dedicated One-Click Demo Login buttons for Admin, Faculty, and Student. Clicking any button bypasses manual credential typing, authenticates against our live Neon PostgreSQL database, and redirects you directly to the appropriate role dashboard.",
+      "The Login page (/login) features one-click demo access for Admin, Faculty, and Student. Demo access depends on the role accounts configured in the connected backend.",
   },
 ];
 

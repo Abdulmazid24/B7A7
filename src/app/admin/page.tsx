@@ -3,24 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Users,
-  GraduationCap,
-  Building2,
-  DollarSign,
-  TrendingUp,
-  CreditCard,
-  Plus,
-  BookOpen,
-  CalendarDays,
-  FileCheck2,
-  Layers,
-  ShieldCheck,
-  CheckCircle2,
-  Activity,
-  ArrowUpRight,
-  Sparkles,
-} from "lucide-react";
+import { Users, GraduationCap, Building2, CreditCard, Plus, BookOpen, CalendarDays, Layers, CheckCircle2, Activity, Sparkles } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -29,8 +12,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from "recharts";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { StatCard } from "@/components/shared/stat-card";
@@ -42,9 +23,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { AdminDashboardStats } from "@/types";
+import { AcademicSemester } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
+import { UNIVERSITY_NAME } from "@/lib/constants";
 
 export default function AdminDashboardPage() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "dashboard-stats"],
     queryFn: async () => {
       const res = await api.get<AdminDashboardStats>("/admin/dashboard-stats");
@@ -52,25 +36,27 @@ export default function AdminDashboardPage() {
     },
   });
 
-  const stats = data || {
-    totalUsers: 18,
-    totalStudents: 12,
-    totalFaculties: 4,
-    totalDepartments: 3,
-    totalCourses: 8,
-    totalEnrollments: 24,
-    revenue: {
-      totalAssessed: 14400,
-      totalCollected: 9600,
-      totalOutstanding: 4800,
-    },
-    departmentDistribution: [
-      { name: "CSE", students: 8, courses: 4 },
-      { name: "EEE", students: 3, courses: 2 },
-      { name: "BBA", students: 1, courses: 2 },
-    ],
-    recentEnrollments: [],
-  };
+  const semestersQuery = useQuery({
+    queryKey: ["admin", "semesters"],
+    queryFn: async () => (await api.get<AcademicSemester[]>("/semesters")).data,
+  });
+
+  if (isLoading) {
+    return <div className="flex-1 space-y-6 p-6" aria-label="Loading dashboard">
+      <Skeleton className="h-10 w-64" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-32 rounded-xl" />)}</div>
+      <Skeleton className="h-80 w-full rounded-xl" />
+    </div>;
+  }
+
+  if (isError || !data) {
+    return <div className="flex-1 px-6 py-8">
+      <EmptyState title="Dashboard metrics could not be loaded" description={error instanceof Error ? error.message : "Please try again."} icon={Activity} actionLabel="Retry" onAction={() => void refetch()} />
+    </div>;
+  }
+
+  const stats = data;
+  const activeSemester = semestersQuery.data?.find((semester) => semester.isCurrent);
 
   const revenueChartData = [
     { name: "Assessed Fees", amount: stats.revenue.totalAssessed },
@@ -82,7 +68,7 @@ export default function AdminDashboardPage() {
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
         title="University Operations & Central Command"
-        subtitle="Real-time institutional metrics aggregated from live Neon PostgreSQL database and Stripe gateway."
+        subtitle="Operational overview of departments, courses, users, and payment records."
         action={
           <div className="flex items-center gap-2">
             <Link href="/admin/departments">
@@ -109,15 +95,15 @@ export default function AdminDashboardPage() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-emerald-400">
-                  Neon PostgreSQL Serverless • Live Sync
+                  University operations
                 </span>
               </div>
               <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>Apex University Central Administration</span>
+                <span>{UNIVERSITY_NAME} Operations</span>
                 <Sparkles className="h-4 w-4 text-amber-300" />
               </h3>
               <p className="text-xs text-indigo-200/80 max-w-xl">
-                Active academic session Spring 2026. ACID concurrency lock active across 16 scheduled course offerings.
+                Current records include {stats.totalEnrollments} enrollments across {stats.totalCourses} courses.
               </p>
             </div>
 
@@ -126,7 +112,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[10px] uppercase font-semibold text-indigo-200">Term Registration</p>
                 <p className="text-xs font-bold text-white flex items-center gap-1 justify-end">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>WINDOW OPEN</span>
+                  <span>{activeSemester ? (activeSemester.isRegistrationOpen ? "WINDOW OPEN" : "WINDOW CLOSED") : semestersQuery.isError ? "TERM DATA UNAVAILABLE" : "NO ACTIVE TERM"}</span>
                 </p>
               </div>
               <Link href="/admin/offerings">
@@ -142,33 +128,25 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* STAT CARDS ROW */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Total Enrolled Students"
               value={stats.totalStudents}
               description="Active degree candidates"
               icon={GraduationCap}
-              trend="+12% this term"
               iconColor="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-400"
             />
             <StatCard
               title="Academic Faculty"
               value={stats.totalFaculties}
-              description="Instructors across 3 depts"
+              description="Active faculty accounts"
               icon={Users}
               iconColor="text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-400"
             />
             <StatCard
               title="Active Departments"
               value={stats.totalDepartments}
-              description="CSE, EEE, and BBA"
+              description="Institutional catalog"
               icon={Building2}
               iconColor="text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-400"
             />
@@ -177,11 +155,10 @@ export default function AdminDashboardPage() {
               value={formatCurrency(stats.revenue.totalCollected)}
               description={`Due: ${formatCurrency(stats.revenue.totalOutstanding)}`}
               icon={CreditCard}
-              trend="Automated Webhooks"
+              trend="Recorded payments"
               iconColor="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400"
             />
           </div>
-        )}
 
         {/* BENTO ACTION HUB (ACTION LAUNCHER MATRIX) */}
         <div>
@@ -208,7 +185,7 @@ export default function AdminDashboardPage() {
               gradientClass="from-indigo-500 to-indigo-600 shadow-indigo-500/25"
               metrics={[
                 { label: "Active", value: stats.totalDepartments, color: "indigo" },
-                { label: "Divisions", value: "STEM & Business", color: "blue" },
+                { label: "Courses", value: stats.totalCourses, color: "blue" },
               ]}
             />
 
@@ -231,8 +208,8 @@ export default function AdminDashboardPage() {
               icon={CalendarDays}
               gradientClass="from-blue-500 to-cyan-600 shadow-blue-500/25"
               metrics={[
-                { label: "Current", value: "Spring 2026", color: "blue" },
-                { label: "Window", value: "OPEN", color: "emerald" },
+                { label: "Current", value: activeSemester?.name ?? "None", color: "blue" },
+                { label: "Window", value: activeSemester ? (activeSemester.isRegistrationOpen ? "OPEN" : "CLOSED") : "—", color: "emerald" },
               ]}
             />
 
@@ -243,7 +220,7 @@ export default function AdminDashboardPage() {
               icon={Layers}
               gradientClass="from-amber-500 to-orange-600 shadow-amber-500/25"
               metrics={[
-                { label: "Cap", value: "35 / Sec", color: "amber" },
+                { label: "Enrollments", value: stats.totalEnrollments, color: "amber" },
                 { label: "ACID", value: "Protected", color: "emerald" },
               ]}
             />
@@ -262,7 +239,7 @@ export default function AdminDashboardPage() {
 
             <BentoActionCard
               title="Tuition & Stripe Ledger"
-              description="Real-time audit trail of tuition fee payments"
+              description="Review recorded tuition payment transactions"
               href="/admin/payments"
               icon={CreditCard}
               gradientClass="from-emerald-500 to-green-600 shadow-emerald-500/25"

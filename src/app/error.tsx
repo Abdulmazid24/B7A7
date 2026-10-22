@@ -29,7 +29,7 @@ export default function GlobalError({
         Something went wrong
       </h1>
       <p className="mt-3 max-w-md text-sm text-slate-500 leading-relaxed">
-        {error.message || "An unexpected error occurred while processing this academic request. Please retry."}
+        We could not complete this request. Please try again. If the issue continues, contact the platform administrator.
       </p>
 
       <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -44,6 +44,7 @@ export default function GlobalError({
           </Button>
         </Link>
       </div>
+      {error.digest && <p className="mt-4 text-xs text-slate-400">Reference: {error.digest}</p>}
     </div>
   );
 }

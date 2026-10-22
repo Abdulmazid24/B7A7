@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarDays, Plus, CheckCircle, Clock, Calendar } from "lucide-react";
+import { Plus, CheckCircle, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Modal } from "@/components/ui/modal";
+import { QueryErrorState } from "@/components/shared/query-error-state";
 import { api } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
 import { AcademicSemester } from "@/types";
@@ -32,7 +34,7 @@ export default function AdminSemestersPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: semesters, isLoading } = useQuery({
+  const { data: semesters, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "semesters"],
     queryFn: async () => {
       const res = await api.get<AcademicSemester[]>("/semesters");
@@ -91,14 +93,13 @@ export default function AdminSemestersPage() {
 
       <div className="px-6 space-y-6">
         {/* Modal for Creating Semester */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
-            <Card className="max-w-md w-full shadow-2xl border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-lg">Create Academic Semester</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Create Academic Semester"
+          description="Add an academic term and set its registration dates."
+        >
+          <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <Input
                       label="Semester Name"
@@ -155,11 +156,8 @@ export default function AdminSemestersPage() {
                       Save Semester
                     </Button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          </form>
+        </Modal>
 
         {/* Semesters Cards */}
         {isLoading ? (
@@ -168,6 +166,8 @@ export default function AdminSemestersPage() {
               <Skeleton key={i} className="h-44 rounded-xl" />
             ))}
           </div>
+        ) : isError ? (
+          <QueryErrorState title="Academic terms could not be loaded" onRetry={() => void refetch()} />
         ) : (semesters || []).length === 0 ? (
           <EmptyState
             title="No Semesters Configured"

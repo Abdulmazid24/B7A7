@@ -6,16 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  GraduationCap,
-  Shield,
-  Award,
-  Sparkles,
-  ArrowRight,
-  BookOpen,
-  Lock,
-  Mail,
-} from "lucide-react";
+import { GraduationCap, Shield, Award, Sparkles, ArrowRight, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth-store";
-import { DEMO_CREDENTIALS, UNIVERSITY_NAME } from "@/lib/constants";
+import { UNIVERSITY_NAME } from "@/lib/constants";
 import { soundManager } from "@/lib/audio";
 
 const loginSchema = z.object({
@@ -84,7 +75,7 @@ function LoginFormContent() {
   const handleDemoLogin = async (role: "admin" | "faculty" | "student") => {
     setActiveDemoRole(role);
     try {
-      const user = await loginWithDemoRole(role);
+      await loginWithDemoRole(role);
       soundManager.playSuccessChime();
       toast.success(`Logged in successfully as Demo ${role.toUpperCase()}!`);
 
@@ -116,9 +107,9 @@ function LoginFormContent() {
             {UNIVERSITY_NAME}
           </span>
         </Link>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           Sign in to your academic account
-        </h2>
+        </h1>
         <p className="mt-1 text-sm text-slate-500">
           Or apply as a new student via{" "}
           <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
@@ -142,7 +133,7 @@ function LoginFormContent() {
             </Badge>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
-            Click any button below to instantly authenticate into the live Neon PostgreSQL database without typing credentials:
+            Choose a role to open its demo workspace. Demo access depends on the configured backend accounts.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

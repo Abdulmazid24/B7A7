@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Award, Printer, ShieldCheck, Download, GraduationCap, FileCheck } from "lucide-react";
+import { Printer, FileCheck } from "lucide-react";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,110 +11,40 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { getGradeBadgeClasses } from "@/lib/utils";
 import { AcademicTranscript } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function StudentTranscriptPage() {
-  const { data, isLoading } = useQuery({
+  const { data: transcript, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["student", "transcript"],
     queryFn: async () => {
-      try {
-        const res = await api.get<AcademicTranscript>("/grades/my-transcript");
-        return res.data;
-      } catch {
-        return null;
-      }
+      const res = await api.get<AcademicTranscript>("/grades/my-transcript");
+      return res.data;
     },
   });
 
-  const transcript = data || {
-    student: {
-      id: "stu-1",
-      name: "Tanvir Hossain",
-      studentId: "STU-2026-001",
-      department: "Computer Science & Engineering",
-    },
-    cgpa: 3.82,
-    totalEarnedCredits: 36,
-    semesters: [
-      {
-        semesterId: "sem-1",
-        semesterName: "Spring 2026",
-        semesterGpa: 3.88,
-        semesterCredits: 12,
-        courses: [
-          {
-            courseCode: "CSE101",
-            courseTitle: "Introduction to Computer Science",
-            credits: 3,
-            letterGrade: "A+",
-            gradePoint: 4.0,
-          },
-          {
-            courseCode: "CSE102",
-            courseTitle: "Structured Programming",
-            credits: 3,
-            letterGrade: "A",
-            gradePoint: 3.75,
-          },
-          {
-            courseCode: "MAT101",
-            courseTitle: "Differential & Integral Calculus",
-            credits: 3,
-            letterGrade: "A+",
-            gradePoint: 4.0,
-          },
-          {
-            courseCode: "ENG101",
-            courseTitle: "Basic Academic English",
-            credits: 3,
-            letterGrade: "A-",
-            gradePoint: 3.5,
-          },
-        ],
-      },
-      {
-        semesterId: "sem-2",
-        semesterName: "Summer 2026",
-        semesterGpa: 3.75,
-        semesterCredits: 12,
-        courses: [
-          {
-            courseCode: "CSE201",
-            courseTitle: "Data Structures & Algorithms",
-            credits: 4,
-            letterGrade: "A",
-            gradePoint: 3.75,
-          },
-          {
-            courseCode: "CSE202",
-            courseTitle: "Digital Logic Design",
-            credits: 3,
-            letterGrade: "A",
-            gradePoint: 3.75,
-          },
-          {
-            courseCode: "MAT201",
-            courseTitle: "Linear Algebra & Matrices",
-            credits: 3,
-            letterGrade: "A-",
-            gradePoint: 3.5,
-          },
-          {
-            courseCode: "PHY101",
-            courseTitle: "Physics for Computing",
-            credits: 2,
-            letterGrade: "A+",
-            gradePoint: 4.0,
-          },
-        ],
-      },
-    ],
-  };
+  if (isLoading) {
+    return <div className="flex-1 space-y-4 p-6" aria-label="Loading transcript">
+      {[0, 1, 2].map((item) => <Skeleton key={item} className="h-40 w-full rounded-xl" />)}
+    </div>;
+  }
+
+  if (isError || !transcript) {
+    return <div className="px-6 py-8">
+      <EmptyState
+        title={isError ? "Transcript could not be loaded" : "No transcript available"}
+        description={isError && error instanceof Error ? error.message : "Published grades will appear here when they are available."}
+        icon={FileCheck}
+        actionLabel={isError ? "Retry" : undefined}
+        onAction={isError ? () => void refetch() : undefined}
+      />
+    </div>;
+  }
 
   return (
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
-        title="Official Academic Transcript"
-        subtitle="Cryptographically verified semester records, letter grades, and cumulative CGPA."
+        title="Academic Transcript"
+        subtitle="Published semester grades, letter grades, and cumulative GPA from your academic record."
         action={
           <Button
             size="sm"
@@ -135,10 +65,7 @@ export default function StudentTranscriptPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-indigo-600 text-white text-xs">Official Record</Badge>
-                  <span className="text-xs text-indigo-200 flex items-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Verified by Registrar
-                  </span>
+                  <Badge className="bg-indigo-600 text-white text-xs">Published Academic Record</Badge>
                 </div>
                 <h2 className="text-2xl font-bold">{transcript.student.name}</h2>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-indigo-200">
@@ -173,7 +100,9 @@ export default function StudentTranscriptPage() {
 
         {/* Semester-wise breakdown */}
         <div className="space-y-6">
-          {transcript.semesters.map((sem) => (
+          {transcript.semesters.length === 0 ? (
+            <EmptyState title="No published grades yet" description="Your transcript will be available after faculty publish semester grades." icon={FileCheck} />
+          ) : transcript.semesters.map((sem) => (
             <Card key={sem.semesterId} className="border-slate-200/80 overflow-hidden shadow-sm">
               <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3.5 px-6 dark:bg-slate-900/60 dark:border-slate-800">
                 <div className="flex items-center justify-between">
@@ -193,11 +122,11 @@ export default function StudentTranscriptPage() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50/40 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider dark:bg-slate-900 dark:border-slate-800">
                       <tr>
-                        <th className="py-2.5 px-6">Course Code</th>
-                        <th className="py-2.5 px-6">Course Title</th>
-                        <th className="py-2.5 px-6 text-center">Credits</th>
-                        <th className="py-2.5 px-6 text-center">Letter Grade</th>
-                        <th className="py-2.5 px-6 text-right">Grade Point</th>
+                        <th scope="col" className="py-2.5 px-6">Course Code</th>
+                        <th scope="col" className="py-2.5 px-6">Course Title</th>
+                        <th scope="col" className="py-2.5 px-6 text-center">Credits</th>
+                        <th scope="col" className="py-2.5 px-6 text-center">Letter Grade</th>
+                        <th scope="col" className="py-2.5 px-6 text-right">Grade Point</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -232,26 +161,9 @@ export default function StudentTranscriptPage() {
           ))}
         </div>
 
-        {/* Official University Seal & Signatures for Print */}
-        <div className="hidden print:flex items-center justify-between pt-16 mt-16 border-t-2 border-slate-800 text-xs">
-          <div className="text-center">
-            <div className="w-48 border-b border-slate-800 mb-1" />
-            <p className="font-bold text-slate-800">Office of the Registrar</p>
-            <p className="text-slate-500">Apex University Academic Affairs</p>
-          </div>
-          <div className="text-center">
-            <div className="h-20 w-20 mx-auto mb-1 rounded-full border-2 border-dashed border-indigo-700 flex flex-col items-center justify-center text-[9px] font-bold text-indigo-700 uppercase">
-              <span>Apex UMS</span>
-              <span className="text-[7px]">Official Seal</span>
-            </div>
-            <p className="text-[10px] text-slate-400">Security Verified</p>
-          </div>
-          <div className="text-center">
-            <div className="w-48 border-b border-slate-800 mb-1" />
-            <p className="font-bold text-slate-800">Controller of Examinations</p>
-            <p className="text-slate-500">Board of Academic Accreditation</p>
-          </div>
-        </div>
+        <p className="hidden print:block border-t pt-4 text-center text-xs text-slate-500">
+          Generated from published University Management System records. Request a registrar-issued copy for official certification.
+        </p>
       </div>
     </div>
   );

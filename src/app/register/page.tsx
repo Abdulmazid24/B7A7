@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { GraduationCap, ArrowRight, BookOpen, CheckCircle } from "lucide-react";
+import { GraduationCap, ArrowRight, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { api } from "@/lib/api-client";
 import { UNIVERSITY_NAME } from "@/lib/constants";
+import { AcademicDepartment } from "@/types";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -34,10 +36,16 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const departmentsQuery = useQuery({
+    queryKey: ["public", "departments"],
+    queryFn: async () => (await api.get<AcademicDepartment[]>("/departments")).data,
+  });
 
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -46,9 +54,17 @@ export default function RegisterPage() {
       lastName: "",
       email: "",
       password: "",
-      departmentCode: "CSE",
+      departmentCode: "",
     },
   });
+  const departmentCode = useWatch({ control, name: "departmentCode" });
+
+  useEffect(() => {
+    const firstDepartmentCode = departmentsQuery.data?.[0]?.code;
+    if (firstDepartmentCode && !departmentCode) {
+      setValue("departmentCode", firstDepartmentCode, { shouldValidate: true });
+    }
+  }, [departmentsQuery.data, departmentCode, setValue]);
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
@@ -82,9 +98,9 @@ export default function RegisterPage() {
             {UNIVERSITY_NAME}
           </span>
         </Link>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           Apply & Register as a Student
-        </h2>
+        </h1>
         <p className="mt-1 text-sm text-slate-500">
           Already have an enrolled account?{" "}
           <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
@@ -98,7 +114,7 @@ export default function RegisterPage() {
           <CardHeader>
             <CardTitle className="text-lg">Online Student Enrollment Form</CardTitle>
             <CardDescription>
-              Complete the verified admission form to register in the University Management System.
+              Create a student demo account in the University Management System.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -147,13 +163,23 @@ export default function RegisterPage() {
                 </label>
                 <select
                   id="departmentCode"
+                  disabled={departmentsQuery.isLoading || departmentsQuery.isError || !departmentsQuery.data?.length}
                   className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                   {...register("departmentCode")}
                 >
-                  <option value="CSE">CSE - Computer Science & Engineering</option>
-                  <option value="EEE">EEE - Electrical & Electronic Engineering</option>
-                  <option value="BBA">BBA - Bachelor of Business Administration</option>
+                  <option value="">{departmentsQuery.isLoading ? "Loading departments..." : "Select a department"}</option>
+                  {(departmentsQuery.data || []).map((department) => (
+                    <option key={department.id} value={department.code}>{department.code} - {department.name}</option>
+                  ))}
                 </select>
+                {departmentsQuery.isError ? (
+                  <div className="flex items-center gap-2 text-xs text-rose-600" role="alert">
+                    <span>Departments could not be loaded.</span>
+                    <Button type="button" variant="link" size="sm" onClick={() => void departmentsQuery.refetch()} className="h-auto px-1 py-0 text-rose-700">Try again</Button>
+                  </div>
+                ) : departmentsQuery.data?.length === 0 ? (
+                  <p className="text-xs text-slate-500">No departments are open for registration right now.</p>
+                ) : null}
                 {errors.departmentCode && (
                   <p className="text-xs font-medium text-rose-500 mt-1">
                     {errors.departmentCode.message}
@@ -161,7 +187,7 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full gap-2 mt-4" isLoading={isSubmitting}>
+              <Button type="submit" className="w-full gap-2 mt-4" isLoading={isSubmitting} disabled={departmentsQuery.isLoading || departmentsQuery.isError || !departmentsQuery.data?.length}>
                 Submit Application & Create Account
                 <ArrowRight className="h-4 w-4" />
               </Button>

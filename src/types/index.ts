@@ -158,6 +158,7 @@ export interface StudentGrade {
   };
   sectionId: string;
   classTestMarks?: number | null;
+  assessmentMarks?: number | null;
   midtermMarks?: number | null;
   finalMarks?: number | null;
   totalMarks?: number | null;

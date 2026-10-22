@@ -5,26 +5,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  Building2,
-  Plus,
-  Trash2,
-  Search,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
-} from "lucide-react";
+import { Plus, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Modal } from "@/components/ui/modal";
+import { ConfirmationModal, Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/shared/empty-state";
+import { QueryErrorState } from "@/components/shared/query-error-state";
 import { api } from "@/lib/api-client";
 import { AcademicDepartment } from "@/types";
+import { useUrlSearchParam } from "@/lib/use-url-search-param";
 
 const departmentSchema = z.object({
   name: z.string().min(3, "Department name must be at least 3 characters"),
@@ -36,10 +30,11 @@ type DepartmentFormData = z.infer<typeof departmentSchema>;
 
 export default function AdminDepartmentsPage() {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useUrlSearchParam("q");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<AcademicDepartment | null>(null);
 
-  const { data: departments, isLoading } = useQuery({
+  const { data: departments, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "departments"],
     queryFn: async () => {
       const res = await api.get<AcademicDepartment[]>("/departments");
@@ -70,6 +65,7 @@ export default function AdminDepartmentsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "departments"] });
       toast.success("Department deleted successfully!");
+      setDepartmentToDelete(null);
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to delete department");
@@ -100,13 +96,24 @@ export default function AdminDepartmentsPage() {
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
         title="Academic Departments"
-        subtitle="Create and govern degree-awarding departments across the university."
+        subtitle="Create and manage departments in the academic catalog."
         action={
           <Button size="sm" onClick={() => setIsModalOpen(true)} className="gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
             Add New Department
           </Button>
         }
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(departmentToDelete)}
+        onClose={() => setDepartmentToDelete(null)}
+        onConfirm={() => { if (departmentToDelete) deleteMutation.mutate(departmentToDelete.id); }}
+        title="Delete department?"
+        description={`Delete ${departmentToDelete?.name ?? "this department"} from the academic catalog? Related records may prevent deletion.`}
+        confirmLabel="Delete department"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
       />
 
       <div className="px-6 space-y-6">
@@ -116,6 +123,7 @@ export default function AdminDepartmentsPage() {
             <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
+              aria-label="Search departments by name or code"
               placeholder="Search departments by name or code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -133,7 +141,7 @@ export default function AdminDepartmentsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title="Create Academic Department"
-          description="Enter the official department title and unique code."
+          description="Enter the department name and unique code."
         >
           <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
             <Input
@@ -185,6 +193,8 @@ export default function AdminDepartmentsPage() {
               <Skeleton key={i} className="h-44 rounded-xl" />
             ))}
           </div>
+        ) : isError ? (
+          <QueryErrorState title="Departments could not be loaded" onRetry={() => void refetch()} />
         ) : filtered.length === 0 ? (
           <EmptyState
             title="No Departments Found"
@@ -204,12 +214,9 @@ export default function AdminDepartmentsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label={`Delete department ${dept.name}`}
                       className="h-8 w-8 text-slate-400 hover:text-rose-600"
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete ${dept.name}?`)) {
-                          deleteMutation.mutate(dept.id);
-                        }
-                      }}
+                      onClick={() => setDepartmentToDelete(dept)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -218,7 +225,7 @@ export default function AdminDepartmentsPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-xs text-slate-500">
                   <p className="line-clamp-2">
-                    {dept.description || "Primary academic division offering certified semester curricula."}
+                    {dept.description || "Department record in the academic catalog."}
                   </p>
                   <div className="pt-3 border-t flex items-center justify-between text-slate-400 font-mono text-[10px]">
                     <span>ID: {dept.id.slice(0, 8)}...</span>

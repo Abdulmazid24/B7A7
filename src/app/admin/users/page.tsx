@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Search, Shield, Trash2, CheckCircle2, UserCheck, ShieldAlert, Filter } from "lucide-react";
+import { Search, Trash2, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { QueryErrorState } from "@/components/shared/query-error-state";
+import { ConfirmationModal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
 import { formatDate, getStatusBadgeClasses } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -27,6 +29,7 @@ function AdminUsersContent() {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedRole, setSelectedRole] = useState<string>(initialRole);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   // Synchronize URL parameters with user search & role filters
   useEffect(() => {
@@ -39,7 +42,7 @@ function AdminUsersContent() {
     router.replace(targetUrl, { scroll: false });
   }, [debouncedSearchTerm, selectedRole, router]);
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "users"],
     queryFn: async () => {
       const res = await api.get<User[]>("/users?limit=50");
@@ -67,6 +70,7 @@ function AdminUsersContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       toast.success("User account soft-deleted!");
+      setUserToDelete(null);
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to delete user");
@@ -89,27 +93,42 @@ function AdminUsersContent() {
         subtitle="Manage administrative credentials, faculty assignments, and student access accounts with live URL state synchronization."
       />
 
+      <ConfirmationModal
+        isOpen={Boolean(userToDelete)}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={() => { if (userToDelete) deleteMutation.mutate(userToDelete.id); }}
+        title="Deactivate this account?"
+        description={`The ${userToDelete?.email ?? "selected"} account will be soft-deleted and will no longer be available in the active directory.`}
+        confirmLabel="Deactivate account"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
+
       <div className="px-6 space-y-6">
         {/* Filters and Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex flex-1 items-center gap-3 w-full sm:w-auto">
+          <div className="flex w-full flex-1 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-80">
               <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search by name or email (syncs to URL)..."
+              aria-label="Search users by name or email"
+              placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Filter className="h-3.5 w-3.5 text-slate-400" />
               {["ALL", "ADMIN", "FACULTY", "STUDENT"].map((r) => (
                 <button
                   key={r}
+                  type="button"
                   onClick={() => setSelectedRole(r)}
+                  aria-pressed={selectedRole === r}
+                  aria-label={`Filter users by ${r.toLowerCase()}`}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                     selectedRole === r
                       ? "bg-indigo-600 text-white shadow-sm"
@@ -139,6 +158,8 @@ function AdminUsersContent() {
                   <Skeleton key={i} className="h-12 rounded-lg" />
                 ))}
               </div>
+            ) : isError ? (
+              <QueryErrorState title="User directory could not be loaded" onRetry={() => void refetch()} />
             ) : filtered.length === 0 ? (
               <EmptyState
                 title="No Users Found"
@@ -149,11 +170,11 @@ function AdminUsersContent() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider dark:bg-slate-900 dark:border-slate-800">
                     <tr>
-                      <th className="py-3 px-6">User Account</th>
-                      <th className="py-3 px-6">Assigned Role</th>
-                      <th className="py-3 px-6">Status</th>
-                      <th className="py-3 px-6">Created Date</th>
-                      <th className="py-3 px-6 text-right">Actions</th>
+                      <th scope="col" className="py-3 px-6">User Account</th>
+                      <th scope="col" className="py-3 px-6">Assigned Role</th>
+                      <th scope="col" className="py-3 px-6">Status</th>
+                      <th scope="col" className="py-3 px-6">Created Date</th>
+                      <th scope="col" className="py-3 px-6 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -227,12 +248,9 @@ function AdminUsersContent() {
                           <Button
                             variant="ghost"
                             size="icon"
+                              aria-label={`Delete user ${u.email}`}
                             className="h-7 w-7 text-slate-400 hover:text-rose-600"
-                            onClick={() => {
-                              if (confirm(`Soft-delete user ${u.email}?`)) {
-                                deleteMutation.mutate(u.id);
-                              }
-                            }}
+                            onClick={() => setUserToDelete(u)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

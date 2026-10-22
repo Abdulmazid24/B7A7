@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -23,7 +23,7 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 export default function ContactPage() {
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 
   const {
     register,
@@ -40,11 +40,16 @@ export default function ContactPage() {
     },
   });
 
-  const onSubmit = async (data: ContactFormData) => {
-    // Simulated contact submission
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    toast.success("Thank you! Your academic inquiry has been transmitted to the Registrar Office.");
-    setIsSubmitted(true);
+  const onSubmit = (data: ContactFormData) => {
+    if (!contactEmail) {
+      toast.error("Contact delivery is not configured for this deployment. Your message was not sent.");
+      return;
+    }
+
+    const subject = encodeURIComponent(data.subject);
+    const body = encodeURIComponent(`Name: ${data.fullName}\nReply to: ${data.email}\n\n${data.message}`);
+    window.location.assign(`mailto:${contactEmail}?subject=${subject}&body=${body}`);
+    toast.info("Your email app should open with a draft. Send it there to deliver your inquiry.");
     reset();
   };
 
@@ -79,7 +84,7 @@ export default function ContactPage() {
                     Campus Office & Locations
                   </h3>
                   <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                    Our administrative building is open Sunday through Thursday from 9:00 AM to 5:00 PM for in-person academic counseling.
+                    Campus office hours have not been configured for this demo deployment.
                   </p>
                 </div>
 
@@ -91,7 +96,7 @@ export default function ContactPage() {
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">Central Campus</h4>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        University Avenue, Academic Block 4, Metropolitan Tech City
+                        Campus address not configured
                       </p>
                     </div>
                   </div>
@@ -102,7 +107,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">Telephone Helpline</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">+1 (800) 555-UNIV (Toll-Free Ext. 102)</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Telephone number not configured</p>
                     </div>
                   </div>
 
@@ -111,8 +116,8 @@ export default function ContactPage() {
                       <Mail className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Official Correspondence</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">registrar@university.edu • admissions@university.edu</p>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Contact the platform team</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{contactEmail ?? "Contact email not configured for this deployment"}</p>
                     </div>
                   </div>
                 </div>
@@ -123,25 +128,11 @@ export default function ContactPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">Send an Academic Inquiry</CardTitle>
                   <CardDescription>
-                    All form fields are strictly validated with Zod before submission.
+                    Fields are validated before opening an email draft. Delivery requires a configured contact email.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isSubmitted ? (
-                    <div className="text-center py-8 space-y-3">
-                      <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                        <CheckCircle2 className="h-6 w-6" />
-                      </div>
-                      <h4 className="text-base font-bold text-slate-900">Inquiry Received</h4>
-                      <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                        Our admissions and records officer will respond to your provided email within 24 business hours.
-                      </p>
-                      <Button variant="outline" size="sm" onClick={() => setIsSubmitted(false)} className="mt-2">
-                        Send Another Inquiry
-                      </Button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                       <Input
                         label="Full Name"
                         id="fullName"
@@ -190,8 +181,7 @@ export default function ContactPage() {
                         Submit Inquiry
                         <Send className="h-4 w-4" />
                       </Button>
-                    </form>
-                  )}
+                  </form>
                 </CardContent>
               </Card>
             </div>

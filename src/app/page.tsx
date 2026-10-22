@@ -1,25 +1,15 @@
 import React from "react";
 import Link from "next/link";
-import {
-  GraduationCap,
-  Shield,
-  BookOpen,
-  Award,
-  Users,
-  CreditCard,
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  Building2,
-  ChevronRight,
-  FileCheck2,
-} from "lucide-react";
+import { GraduationCap, Shield, BookOpen, Award, ArrowRight, CheckCircle2, Sparkles, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { UNIVERSITY_NAME } from "@/lib/constants";
+
+export const metadata = {
+  title: "University Management System Demo",
+  description: "Explore role-based university administration, course registration, academic records, and Stripe test payment workflows.",
+};
 
 export default function HomePage() {
   return (
@@ -44,7 +34,7 @@ export default function HomePage() {
               </h1>
 
               <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                Welcome to {UNIVERSITY_NAME}. A unified academic ecosystem providing concurrency-safe course registration, real-time GPA transcripts, and automated Stripe tuition billing across three dedicated role portals.
+                A unified campus management demo for role-based administration, course registration, academic records, and Stripe test payments.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -68,19 +58,19 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Verified Features Pills */}
+              {/* Platform capabilities */}
               <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Strict Role-Based Access Control (RBAC)
+                  Role-based workspaces
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  ACID Concurrency-Safe Course Enrollment
+                  Course registration workflow
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Stripe Payment Webhook Settlement
+                  Stripe test checkout
                 </span>
               </div>
             </div>
@@ -92,27 +82,27 @@ export default function HomePage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div className="p-4">
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">5,000+</p>
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">3</p>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                  Enrolled Students
+                  Role-based workspaces
                 </p>
               </div>
               <div className="p-4">
-                <p className="text-3xl font-extrabold text-indigo-600">150+</p>
+                <p className="text-3xl font-extrabold text-indigo-600">4</p>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                  Academic Faculties
+                  Registration steps
                 </p>
               </div>
               <div className="p-4">
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">33</p>
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">100</p>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                  Production REST APIs
+                  Grading points
                 </p>
               </div>
               <div className="p-4">
-                <p className="text-3xl font-extrabold text-emerald-600">100%</p>
+                <p className="text-3xl font-extrabold text-emerald-600">Stripe</p>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                  Stripe Test Automation
+                  Test checkout
                 </p>
               </div>
             </div>
@@ -130,7 +120,7 @@ export default function HomePage() {
                 Tailored Workflows for Every Campus Stakeholder
               </h3>
               <p className="text-sm text-slate-500 mt-3">
-                Experience distinct authorization guards, navigation sets, and operations according to each verified persona.
+                Each role has a focused workspace for its day-to-day academic tasks.
               </p>
             </div>
 
@@ -151,12 +141,12 @@ export default function HomePage() {
                     </p>
                   </div>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    Orchestrate departments, semesters, curriculum offerings, student statuses, and university revenue reports through interactive Recharts analytics.
+                    Manage departments, semesters, course offerings, user access, and payment records from one operations workspace.
                   </p>
                   <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t">
-                    <li className="flex items-center gap-2">✓ Real-time Aggregate Dashboard Stats</li>
-                    <li className="flex items-center gap-2">✓ Full Department & Course Lifecycle CRUD</li>
-                    <li className="flex items-center gap-2">✓ System Audit Trails & User Roles</li>
+                    <li className="flex items-center gap-2">✓ API-backed operations overview</li>
+                    <li className="flex items-center gap-2">✓ Department and course management</li>
+                    <li className="flex items-center gap-2">✓ User roles and payment records</li>
                   </ul>
                   <div className="pt-2">
                     <Link href="/login">
@@ -187,7 +177,7 @@ export default function HomePage() {
                     View assigned sections, access enrolled student rosters, and input continuous assessments, midterms, and finals with automated Letter Grade computation.
                   </p>
                   <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t">
-                    <li className="flex items-center gap-2">✓ Section Student Attendance Rosters</li>
+                    <li className="flex items-center gap-2">✓ Assigned section rosters</li>
                     <li className="flex items-center gap-2">✓ Dynamic 100-Point Marks Matrix</li>
                     <li className="flex items-center gap-2">✓ Automated Letter Grade / Grade Point</li>
                   </ul>
@@ -217,11 +207,11 @@ export default function HomePage() {
                     </p>
                   </div>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    Register for course sections under ACID concurrency guarantees, view cumulative CGPA transcripts, and pay semester tuition fees via Stripe Checkout.
+                    Register for course sections, view cumulative CGPA records, and pay semester tuition fees through Stripe Checkout.
                   </p>
                   <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t">
                     <li className="flex items-center gap-2">✓ Prerequisite & Credit Validation</li>
-                    <li className="flex items-center gap-2">✓ Official Transcript & GPA Calculation</li>
+                    <li className="flex items-center gap-2">✓ Academic transcript & GPA calculation</li>
                     <li className="flex items-center gap-2">✓ Direct Stripe Checkout Sessions</li>
                   </ul>
                   <div className="pt-2">
@@ -243,21 +233,21 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold sm:text-4xl">
               Ready to experience modern academic administration?
             </h2>
-            <p className="max-w-xl mx-auto text-slate-400 text-sm">
-              Explore the full system using the one-click demo credentials, or apply as a new student today.
-            </p>
-            <div className="flex justify-center gap-3">
-              <Link href="/login">
-                <Button size="lg" className="bg-indigo-600 hover:bg-indigo-500 gap-2">
-                  Launch Quick Demo Login
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/contact">
-                <Button variant="outline" size="lg" className="border-slate-700 text-slate-200 hover:bg-slate-800">
-                  Contact Admissions
-                </Button>
-              </Link>
+              <p className="mx-auto max-w-xl text-sm text-slate-400">
+                Explore the system with a demo role, or review the platform and its sample workflows.
+              </p>
+              <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <Link href="/login" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full gap-2 bg-indigo-600 hover:bg-indigo-500 sm:w-auto">
+                    Launch Quick Demo Login
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/about" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="w-full border-slate-700 text-slate-200 hover:bg-slate-800 sm:w-auto">
+                    About the platform
+                  </Button>
+                </Link>
             </div>
           </div>
         </section>

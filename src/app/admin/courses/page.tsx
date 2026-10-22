@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { BookOpen, Plus, Trash2, Search, Layers, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Modal } from "@/components/ui/modal";
+import { ConfirmationModal, Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/shared/empty-state";
+import { QueryErrorState } from "@/components/shared/query-error-state";
 import { api } from "@/lib/api-client";
 import { Course, AcademicDepartment } from "@/types";
+import { useUrlSearchParam } from "@/lib/use-url-search-param";
 
 const courseSchema = z.object({
   code: z.string().min(3, "Course code must be at least 3 characters").max(10),
@@ -30,10 +32,11 @@ type CourseFormData = z.infer<typeof courseSchema>;
 
 export default function AdminCoursesPage() {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useUrlSearchParam("q");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
-  const { data: courses, isLoading: isCoursesLoading } = useQuery({
+  const { data: courses, isLoading: isCoursesLoading, isError: isCoursesError, refetch: refetchCourses } = useQuery({
     queryKey: ["admin", "courses"],
     queryFn: async () => {
       const res = await api.get<Course[]>("/courses?limit=100");
@@ -41,7 +44,7 @@ export default function AdminCoursesPage() {
     },
   });
 
-  const { data: departments } = useQuery({
+  const { data: departments, isLoading: isDepartmentsLoading, isError: isDepartmentsError, refetch: refetchDepartments } = useQuery({
     queryKey: ["admin", "departments"],
     queryFn: async () => {
       const res = await api.get<AcademicDepartment[]>("/departments");
@@ -72,6 +75,7 @@ export default function AdminCoursesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "courses"] });
       toast.success("Course deleted successfully!");
+      setCourseToDelete(null);
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to delete course");
@@ -104,13 +108,24 @@ export default function AdminCoursesPage() {
     <div className="flex-1 space-y-8 pb-12">
       <DashboardHeader
         title="Courses & Curricula"
-        subtitle="Manage official courses, credit weights, and prerequisite dependencies."
+        subtitle="Manage courses, credit weights, and prerequisite dependencies."
         action={
           <Button size="sm" onClick={() => setIsModalOpen(true)} className="gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
             Add New Course
           </Button>
         }
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(courseToDelete)}
+        onClose={() => setCourseToDelete(null)}
+        onConfirm={() => { if (courseToDelete) deleteMutation.mutate(courseToDelete.id); }}
+        title="Delete course?"
+        description={`Delete ${courseToDelete?.code ?? "this course"} from the academic catalog? Existing offerings may prevent deletion.`}
+        confirmLabel="Delete course"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
       />
 
       <div className="px-6 space-y-6">
@@ -120,6 +135,7 @@ export default function AdminCoursesPage() {
             <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
+              aria-label="Search courses by code or title"
               placeholder="Search courses by code or title..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -215,12 +231,14 @@ export default function AdminCoursesPage() {
         </Modal>
 
         {/* Courses Grid */}
-        {isCoursesLoading ? (
+        {isCoursesLoading || isDepartmentsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-44 rounded-xl" />
             ))}
           </div>
+        ) : isCoursesError || isDepartmentsError ? (
+          <QueryErrorState title="The course catalog could not be loaded" onRetry={() => { void refetchCourses(); void refetchDepartments(); }} />
         ) : filtered.length === 0 ? (
           <EmptyState
             title="No Courses Found"
@@ -246,9 +264,7 @@ export default function AdminCoursesPage() {
                         size="icon"
                         className="h-7 w-7 text-slate-400 hover:text-rose-600"
                         onClick={() => {
-                          if (confirm(`Delete course ${course.code}?`)) {
-                            deleteMutation.mutate(course.id);
-                          }
+                          setCourseToDelete(course)
                         }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

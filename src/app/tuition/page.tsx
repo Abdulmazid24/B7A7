@@ -1,20 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import {
-  CreditCard,
-  ShieldCheck,
-  CheckCircle2,
-  DollarSign,
-  HelpCircle,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+import { CreditCard, ArrowRight, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { UNIVERSITY_NAME } from "@/lib/constants";
+import { Card } from "@/components/ui/card";
 
 export const metadata = {
   title: "Tuition Structure, Fees & Stripe Billing",
@@ -52,16 +43,17 @@ export default function TuitionPage() {
                   Undergraduate
                 </Badge>
                 <div className="space-y-1">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">$150</span>
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">$500</span>
                   <span className="text-xs text-slate-500"> / credit hour</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Applies to standard courses across Computer Science, Electrical Engineering, and Business Administration.
+                  The current demo backend assesses this amount for each registered course credit.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-3 border-t">
                   <li className="flex items-center gap-2">✓ Automated credit computation</li>
-                  <li className="flex items-center gap-2">✓ Laboratory and library access included</li>
-                  <li className="flex items-center gap-2">✓ Settle via Stripe Checkout</li>
+                  <li className="flex items-center gap-2">✓ Calculated from course credits</li>
+                  <li className="flex items-center gap-2">✓ Added to the semester invoice</li>
+                  <li className="flex items-center gap-2">✓ Payable through Stripe Checkout</li>
                 </ul>
               </Card>
 
@@ -71,11 +63,11 @@ export default function TuitionPage() {
                   <Sparkles className="h-4 w-4 text-indigo-600" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">$1,800</span>
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">$6,000</span>
                   <span className="text-xs text-slate-500"> / semester base</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Standard undergraduate full-time enrollment block (12 credits across 4 registered sections).
+                  Example estimate at the current demo rate. Your invoice reflects the credits actually registered.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-3 border-t">
                   <li className="flex items-center gap-2">✓ Full course registration quota (15 cr max)</li>
@@ -86,19 +78,18 @@ export default function TuitionPage() {
 
               <Card className="border-slate-200/80 p-6 space-y-4">
                 <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50">
-                  Graduate & Honors
+                  Billing rules
                 </Badge>
                 <div className="space-y-1">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">$220</span>
-                  <span className="text-xs text-slate-500"> / credit hour</span>
+                  <span className="text-xl font-bold text-slate-900 dark:text-white">One configured rate</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Specialized graduate research credits, thesis advisement, and advanced faculty laboratory modules.
+                  The current demo backend applies this configured rate to each course credit.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 pt-3 border-t">
-                  <li className="flex items-center gap-2">✓ Research lab allocations</li>
-                  <li className="flex items-center gap-2">✓ Direct faculty mentorship</li>
-                  <li className="flex items-center gap-2">✓ Official degree completion records</li>
+                  <li className="flex items-center gap-2">✓ Registration updates the invoice</li>
+                  <li className="flex items-center gap-2">✓ Withdrawals adjust assessed tuition</li>
+                  <li className="flex items-center gap-2">✓ Payment status is verified by the backend</li>
                 </ul>
               </Card>
             </div>
@@ -114,7 +105,7 @@ export default function TuitionPage() {
                     Integrated with Stripe Payment Gateway
                   </h4>
                   <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
-                    Students can pay their semester tuition directly from the Student Portal. Our server securely creates a Stripe Checkout session and confirms payments through cryptographic webhook signatures (`whsec_...`).
+                    Students can pay assessed invoices from the Student Portal. The backend creates Stripe Checkout sessions and verifies payment status through signed webhooks or session verification.
                   </p>
                 </div>
               </div>

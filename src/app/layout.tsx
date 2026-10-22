@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://b7-a7-ums.vercel.app"),
   title: {
-    default: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
+    default: `${UNIVERSITY_NAME} | University Management System`,
     template: `%s | ${UNIVERSITY_NAME}`,
   },
   description:
-    "Official Next.js Fullstack University Management System (UMS) portal with role-based access for Administrators, Faculty members, and Students.",
+    "University Management System demo portal with role based access for administrators, faculty members, and students.",
   keywords: [
     "University Management System",
     "UMS",
@@ -35,15 +35,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://b7-a7-ums.vercel.app",
-    title: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
-    description: "Fullstack Higher Education ERP with Student Registration, Faculty Grading & Admin Controls.",
+    url: "https://b7-a7-lac.vercel.app",
+    title: `${UNIVERSITY_NAME} | University Management System`,
+    description: "University Management System demo with student registration, faculty grading, and administration workflows.",
     siteName: UNIVERSITY_NAME,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${UNIVERSITY_NAME} | Enterprise Academic Portal`,
-    description: "Enterprise University Management System built with Next.js 16, TypeScript & Tailwind CSS.",
+    title: `${UNIVERSITY_NAME} | University Management System`,
+    description: "University Management System demo built with Next.js and TypeScript.",
   },
 };
 
@@ -65,9 +65,9 @@ export default function RootLayout({
           Skip to main content
         </a>
         <QueryProvider>
-          <main id="main-content" className="flex-1 flex flex-col focus:outline-none">
+          <div id="main-content" tabIndex={-1} className="flex-1 flex flex-col focus:outline-none">
             {children}
-          </main>
+          </div>
         </QueryProvider>
       </body>
     </html>

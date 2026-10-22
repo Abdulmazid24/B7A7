@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { GraduationCap, ShieldCheck, Mail, Phone, MapPin } from "lucide-react";
+import { GraduationCap, Mail } from "lucide-react";
 import { UNIVERSITY_NAME } from "@/lib/constants";
 
 export function Footer() {
@@ -19,12 +19,9 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Leading the future of higher education with cutting-edge academic curricula, transparent grading, and integrated campus ERP systems.
+              A demonstration campus platform for administration, faculty, and student workflows.
             </p>
-            <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              <ShieldCheck className="h-4 w-4" />
-              Accredited by National Academic Council
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Sample institution and records are for demonstration.</p>
           </div>
 
           {/* Col 2: Academics */}
@@ -92,16 +89,14 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
               <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span>University Avenue, Tech City</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span>+1 (800) 555-UNIV</span>
-              </li>
-              <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span>admissions@university.edu</span>
+                {process.env.NEXT_PUBLIC_CONTACT_EMAIL ? (
+                  <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}`} className="break-all hover:text-indigo-600">
+                    {process.env.NEXT_PUBLIC_CONTACT_EMAIL}
+                  </a>
+                ) : (
+                  <Link href="/contact" className="hover:text-indigo-600">Contact details for this demo</Link>
+                )}
               </li>
             </ul>
           </div>
@@ -109,9 +104,7 @@ export function Footer() {
 
         <div className="mt-10 border-t border-slate-100 dark:border-slate-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
           <p>© 2026 {UNIVERSITY_NAME}. All rights reserved.</p>
-          <p className="mt-2 sm:mt-0 font-mono">
-            Powered by Next.js 16 • Prisma ORM • Neon PostgreSQL
-          </p>
+          <p className="mt-2 sm:mt-0">University Management System demo</p>
         </div>
       </div>
     </footer>

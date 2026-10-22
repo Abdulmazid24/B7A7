@@ -2,23 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  PlusCircle,
-  MinusCircle,
-  Clock,
-  MapPin,
-  CheckCircle2,
-  AlertTriangle,
-  BookOpen,
-  ShieldCheck,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  CreditCard,
-  FileCheck2,
-  Printer,
-} from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PlusCircle, MinusCircle, Clock, MapPin, CheckCircle2, BookOpen, ShieldCheck, ArrowRight, ArrowLeft, Sparkles, CreditCard, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -29,14 +14,15 @@ import { soundManager } from "@/lib/audio";
 import { api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { CourseOffering } from "@/types";
+import { Enrollment, TuitionFee } from "@/types";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function StudentRegistrationPage() {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [enrolledSections, setEnrolledSections] = useState<string[]>(["sec-1", "sec-2"]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const { data: offerings, isLoading } = useQuery({
+  const { data: offerings = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["student", "registration-offerings"],
     queryFn: async () => {
       const res = await api.get<CourseOffering[]>("/course-offerings");
@@ -44,26 +30,59 @@ export default function StudentRegistrationPage() {
     },
   });
 
-  const enrolledCredits = enrolledSections.length * 3;
-  const tuitionPerCredit = 100;
-  const totalTuition = enrolledCredits * tuitionPerCredit;
+  const enrollmentsQuery = useQuery({
+    queryKey: ["student", "my-courses"],
+    queryFn: async () => (await api.get<Enrollment[]>("/enrollments/my-courses")).data,
+  });
+  const invoicesQuery = useQuery({
+    queryKey: ["student", "invoices"],
+    queryFn: async () => (await api.get<{ tuitionFees: TuitionFee[] }>("/payments/my-invoices")).data.tuitionFees,
+  });
+
+  const currentSemester = offerings.find((offering) => offering.semester?.isCurrent)?.semester;
+  const currentOfferings = offerings.filter((offering) => offering.semesterId === currentSemester?.id);
+  const availableSections = currentOfferings.flatMap((offering) =>
+    (offering.sections ?? []).map((section) => ({ offering, section }))
+  );
+  const activeEnrollments = (enrollmentsQuery.data ?? []).filter((enrollment) =>
+    enrollment.status === "ENROLLED" && enrollment.section?.offering?.semester?.id === currentSemester?.id
+  );
+  const enrolledSections = new Set(activeEnrollments.map((enrollment) => enrollment.sectionId ?? enrollment.section?.id).filter((id): id is string => Boolean(id)));
+  const enrolledCredits = activeEnrollments.reduce((sum, enrollment) => sum + (enrollment.section?.offering?.course?.credits ?? 0), 0);
+  const tuitionFee = invoicesQuery.data?.find((invoice) => invoice.semesterId === currentSemester?.id);
 
   const toggleSection = async (sectionId: string, courseCode: string) => {
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setIsProcessing(false);
-
-    if (enrolledSections.includes(sectionId)) {
-      setEnrolledSections((prev) => prev.filter((id) => id !== sectionId));
-      toast.info(`Dropped ${courseCode}. Tuition bill adjusted.`);
-    } else {
-      if (enrolledCredits + 3 > 15) {
+    const alreadyEnrolled = enrolledSections.has(sectionId);
+    try {
+      if (!alreadyEnrolled) {
+        const selected = availableSections.find(({ section }) => section.id === sectionId);
+        const credits = selected?.offering.course?.credits ?? 0;
+        if (enrolledCredits + credits > 15) {
         toast.error("Credit Limit Reached! Maximum 15 credits per academic term allowed.");
-        return;
+          setIsProcessing(false);
+          return;
+        }
+        await api.post("/enrollments/register", { sectionId });
+      } else {
+        await api.post("/enrollments/withdraw", { sectionId });
       }
-      setEnrolledSections((prev) => [...prev, sectionId]);
-      soundManager.playSuccessChime();
-      toast.success(`Successfully enrolled in ${courseCode} under ACID transaction lock!`);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["student", "my-courses"] }),
+        queryClient.invalidateQueries({ queryKey: ["student", "registration-offerings"] }),
+        queryClient.invalidateQueries({ queryKey: ["student", "invoices"] }),
+      ]);
+      if (alreadyEnrolled) {
+        toast.info(`${courseCode} section withdrawn. The updated balance is shown in invoices.`);
+      } else {
+        soundManager.playSuccessChime();
+        toast.success(`${courseCode} section registered successfully.`);
+      }
+    } catch (requestError) {
+      toast.error(requestError instanceof Error ? requestError.message : "Registration could not be updated.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -147,8 +166,10 @@ export default function StudentRegistrationPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1 dark:border-slate-800 dark:bg-slate-900/40">
                   <p className="text-[11px] font-semibold text-slate-500 uppercase">Term Active</p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">Spring 2026 Semester</p>
-                  <p className="text-[11px] text-emerald-600 font-medium">Window: Open until Nov 10</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{currentSemester?.name ?? "No active semester"}</p>
+                  <p className={`text-[11px] font-medium ${currentSemester?.isRegistrationOpen ? "text-emerald-600" : "text-amber-600"}`}>
+                    {currentSemester?.isRegistrationOpen ? "Registration window open" : "Registration window closed"}
+                  </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1 dark:border-slate-800 dark:bg-slate-900/40">
@@ -161,9 +182,9 @@ export default function StudentRegistrationPage() {
                   <p className="text-[11px] font-semibold text-slate-500 uppercase">Prerequisites Cleared</p>
                   <p className="text-sm font-bold text-emerald-600 flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>100% Eligible</span>
+                    <span>Checked by server</span>
                   </p>
-                  <p className="text-[11px] text-slate-500 font-medium">No holds or academic restrictions</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Prerequisites are checked when you register for a course.</p>
                 </div>
               </div>
 
@@ -173,8 +194,7 @@ export default function StudentRegistrationPage() {
                   <span>Important ACID Concurrency Notice</span>
                 </p>
                 <p>
-                  When you select a course section, seats are reserved in real-time inside an ACID database transaction.
-                  Once you finalize registration, your seat is guaranteed and your tuition statement is updated dynamically.
+                  Registration requests are validated and committed by the backend transaction. A seat is confirmed only after the API accepts the request.
                 </p>
               </div>
 
@@ -206,30 +226,40 @@ export default function StudentRegistrationPage() {
               </Badge>
             </div>
 
-            {isLoading ? (
+            {isLoading || enrollmentsQuery.isLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-36 rounded-xl" />
                 ))}
               </div>
+            ) : isError || enrollmentsQuery.isError ? (
+              <EmptyState
+                title="Registration data could not be loaded"
+                description={error instanceof Error ? error.message : enrollmentsQuery.error instanceof Error ? enrollmentsQuery.error.message : "Please try again."}
+                icon={BookOpen}
+                actionLabel="Retry"
+                onAction={() => { void refetch(); void enrollmentsQuery.refetch(); }}
+              />
+            ) : availableSections.length === 0 ? (
+              <EmptyState title="No sections available" description={currentSemester ? "No course sections are published for the current semester." : "The university has not marked an active semester."} icon={BookOpen} />
             ) : (
               <div className="space-y-4">
-                {(offerings || []).map((offering) => {
-                  const isEnrolled = enrolledSections.includes(offering.id || "sec-1");
+                {availableSections.map(({ offering, section }) => {
+                  const isEnrolled = enrolledSections.has(section.id);
                   return (
-                    <Card key={offering.id} className="border-slate-200/80 overflow-hidden">
+                    <Card key={section.id} className="border-slate-200/80 overflow-hidden">
                       <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3.5 px-6 dark:bg-slate-900/60 dark:border-slate-800">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
                             <Badge variant="secondary" className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50">
-                              {offering.course?.code || "CSE101"}
+                              {offering.course?.code || "Course"}
                             </Badge>
                             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                              {offering.course?.title || "Core Curriculum Course"}
+                              {offering.course?.title || "Course title unavailable"}
                             </h4>
                           </div>
                           <span className="text-xs text-slate-500 font-medium">
-                            {offering.course?.credits || 3} Credit Hours • Department of {offering.course?.department?.code || "CSE"}
+                            {offering.course?.credits ?? 0} Credit Hours • {offering.course?.department?.code ?? "Department unavailable"}
                           </span>
                         </div>
                       </CardHeader>
@@ -238,20 +268,20 @@ export default function StudentRegistrationPage() {
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-xs text-indigo-600">
-                                Section {offering.sectionNumber || 1}
+                                Section {section.sectionNumber}
                               </span>
                               <Badge variant="outline" className="text-[10px]">
-                                Capacity: {offering.capacity || 40} Seats
+                                Seats: {section.enrolledCount} / {section.capacity}
                               </Badge>
                             </div>
                             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                               <span className="flex items-center gap-1.5">
                                 <Clock className="h-3.5 w-3.5" />
-                                {offering.scheduleTime || "Mon, Wed 10:00 AM - 11:30 AM"}
+                                {section.schedule || "Schedule not set"}
                               </span>
                               <span className="flex items-center gap-1.5">
                                 <MapPin className="h-3.5 w-3.5" />
-                                {offering.roomNumber || "Building 3, Room 402"}
+                                {section.room || "Room not set"}
                               </span>
                             </div>
                           </div>
@@ -260,8 +290,8 @@ export default function StudentRegistrationPage() {
                             size="sm"
                             variant={isEnrolled ? "destructive" : "default"}
                             className="text-xs h-9 gap-1.5 shrink-0"
-                            disabled={isProcessing}
-                            onClick={() => toggleSection(offering.id || "sec-1", offering.course?.code || "CSE101")}
+                            disabled={isProcessing || (!isEnrolled && (!currentSemester?.isRegistrationOpen || section.enrolledCount >= section.capacity))}
+                            onClick={() => toggleSection(section.id, offering.course?.code || "Course")}
                           >
                             {isEnrolled ? (
                               <>
@@ -290,7 +320,7 @@ export default function StudentRegistrationPage() {
               </Button>
               <Button
                 onClick={() => setCurrentStep(3)}
-                disabled={enrolledSections.length === 0}
+                disabled={enrolledSections.size === 0}
                 className="gap-2 text-xs"
               >
                 Continue to Tuition Review ({enrolledCredits} Cr)
@@ -316,20 +346,20 @@ export default function StudentRegistrationPage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 space-y-4 dark:border-slate-800 dark:bg-slate-900/40">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold">
                   <span>Registered Credit Hours</span>
-                  <span>{enrolledCredits} Credits @ $100/credit</span>
+                  <span>{enrolledCredits} Credits</span>
                 </div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 text-xs">
-                  <span>Laboratory & IT Infrastructure Fee</span>
-                  <span>$150.00</span>
+                  <span>Assessed amount</span>
+                  <span>{tuitionFee ? formatCurrency(tuitionFee.totalAmount) : "No invoice yet"}</span>
                 </div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 text-xs">
-                  <span>Student Activity & Library Dues</span>
-                  <span>$50.00</span>
+                  <span>Paid to date</span>
+                  <span>{formatCurrency(tuitionFee?.paidAmount ?? 0)}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 text-sm font-bold text-slate-900 dark:text-white">
                   <span>Total Assessed Term Balance</span>
                   <span className="text-emerald-600 text-base font-mono">
-                    {formatCurrency(totalTuition + 200)}
+                    {tuitionFee ? formatCurrency(tuitionFee.dueAmount) : "Not assessed"}
                   </span>
                 </div>
               </div>
@@ -354,14 +384,14 @@ export default function StudentRegistrationPage() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 text-xs shadow-md shadow-emerald-500/20"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Lock & Confirm Enrollment
+                  Review Registered Courses
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* STEP 4: Official Enrollment Confirmation */}
+        {/* STEP 4: Registration Summary */}
         {currentStep === 4 && (
           <Card className="border-slate-200/80 shadow-xl overflow-hidden text-center p-8 space-y-6">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-500/20">
@@ -370,20 +400,19 @@ export default function StudentRegistrationPage() {
 
             <div className="space-y-2 max-w-md mx-auto">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Official Term Registration Confirmed!
+                Registration Summary
               </h3>
               <p className="text-xs text-slate-500">
-                Your course sections have been committed under PostgreSQL ACID transaction locks.
-                Your enrollment is authenticated and active for Spring 2026.
+                The API currently reports these enrolled sections for {currentSemester?.name ?? "the active semester"}.
               </p>
             </div>
 
             <div className="inline-flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
               <span><strong>Enrolled Load:</strong> {enrolledCredits} Credits</span>
               <span>•</span>
-              <span><strong>Tuition:</strong> {formatCurrency(totalTuition + 200)}</span>
+              <span><strong>Balance:</strong> {formatCurrency(tuitionFee?.dueAmount ?? 0)}</span>
               <span>•</span>
-              <span><strong>Status:</strong> CONFIRMED</span>
+              <span><strong>Status:</strong> {enrolledSections.size > 0 ? "ENROLLED" : "NO ENROLLMENTS"}</span>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-4">

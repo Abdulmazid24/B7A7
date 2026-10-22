@@ -1,25 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  GraduationCap,
-  LayoutDashboard,
-  Building2,
-  CalendarDays,
-  BookOpen,
-  Layers,
-  Users,
-  Receipt,
-  Award,
-  PlusCircle,
-  FileText,
-  CreditCard,
-  LogOut,
-  Shield,
-  UserCheck,
-} from "lucide-react";
+import { GraduationCap, LayoutDashboard, Building2, CalendarDays, BookOpen, Layers, Users, Receipt, Award, PlusCircle, FileText, CreditCard, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +33,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const role = user?.role || "STUDENT";
   const links =
@@ -66,25 +51,31 @@ export function DashboardSidebar() {
       : "bg-emerald-500/10 text-emerald-700 border-emerald-200";
 
   return (
-    <aside className="w-64 border-r border-slate-200 bg-white flex flex-col justify-between shrink-0 dark:border-slate-800 dark:bg-slate-950 min-h-screen">
-      <div>
-        {/* Top Branding */}
-        <div className="h-16 px-6 border-b border-slate-200 flex items-center gap-3 dark:border-slate-800">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-slate-900 dark:text-white leading-tight block">
-                {UNIVERSITY_NAME}
-              </span>
-              <span className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider block">
-                {role} Portal
-              </span>
-            </div>
-          </Link>
-        </div>
+    <aside className="relative z-40 w-full shrink-0 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:flex-col lg:justify-between lg:border-b-0 lg:border-r">
+      <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800 lg:px-6">
+        <Link href="/" className="flex items-center gap-2.5" onClick={() => setIsMobileNavOpen(false)}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div>
+            <span className="block text-sm font-bold leading-tight text-slate-900 dark:text-white">{UNIVERSITY_NAME}</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-wider text-indigo-600">{role} Portal</span>
+          </div>
+        </Link>
+        <button
+          type="button"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-300 dark:hover:bg-slate-900 lg:hidden"
+          aria-label={isMobileNavOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
+          aria-expanded={isMobileNavOpen}
+          aria-controls="dashboard-navigation"
+          onClick={() => setIsMobileNavOpen((open) => !open)}
+        >
+          {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
 
+      <div className={`${isMobileNavOpen ? "block" : "hidden"} lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:justify-between`}>
+       <div className="overflow-y-auto">
         {/* User Identity Pill */}
         <div className="p-4 mx-3 my-3 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center gap-3">
@@ -117,7 +108,7 @@ export function DashboardSidebar() {
         </div>
 
         {/* Navigation List */}
-        <nav aria-label="Dashboard navigation" className="px-3 py-2 space-y-1">
+        <nav id="dashboard-navigation" aria-label="Dashboard navigation" className="px-3 py-2 space-y-1">
           <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
             Navigation
           </p>
@@ -129,6 +120,7 @@ export function DashboardSidebar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setIsMobileNavOpen(false)}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
@@ -143,11 +135,11 @@ export function DashboardSidebar() {
             );
           })}
         </nav>
-      </div>
+       </div>
 
       {/* Bottom Footer Actions */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
-        <Link href="/" className="block">
+      <div className="space-y-2 border-t border-slate-200 p-4 dark:border-slate-800 lg:shrink-0">
+        <Link href="/" className="block" onClick={() => setIsMobileNavOpen(false)}>
           <Button variant="ghost" size="sm" className="w-full justify-start text-xs text-slate-500 gap-2">
             <BookOpen className="h-3.5 w-3.5" />
             Public Campus Website
@@ -156,12 +148,13 @@ export function DashboardSidebar() {
         <Button
           variant="outline"
           size="sm"
-          onClick={logout}
+          onClick={() => { logout(); setIsMobileNavOpen(false); }}
           className="w-full justify-start text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 gap-2"
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign Out
         </Button>
+      </div>
       </div>
     </aside>
   );
