@@ -23,7 +23,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { AdminDashboardStats } from "@/types";
-import { AcademicSemester } from "@/types";
 import { EmptyState } from "@/components/shared/empty-state";
 import { UNIVERSITY_NAME } from "@/lib/constants";
 
@@ -34,11 +33,6 @@ export default function AdminDashboardPage() {
       const res = await api.get<AdminDashboardStats>("/admin/dashboard-stats");
       return res.data;
     },
-  });
-
-  const semestersQuery = useQuery({
-    queryKey: ["admin", "semesters"],
-    queryFn: async () => (await api.get<AcademicSemester[]>("/semesters")).data,
   });
 
   if (isLoading) {
@@ -55,11 +49,23 @@ export default function AdminDashboardPage() {
     </div>;
   }
 
-  const stats = data;
-  const activeSemester = semestersQuery.data?.find((semester) => semester.isCurrent);
+  const stats = {
+    totalUsers:
+      data.overview.totalStudents + data.overview.totalFaculty + data.overview.totalAdmins,
+    totalStudents: data.overview.totalStudents,
+    totalFaculties: data.overview.totalFaculty,
+    totalDepartments: data.overview.totalDepartments,
+    totalCourses: data.overview.totalCourses,
+    totalEnrollments: data.overview.totalEnrollments,
+    revenue: {
+      totalCollected: data.overview.totalRevenueCollected,
+      totalOutstanding: data.overview.totalOutstandingDue,
+    },
+  };
+  const activeSemester = data.activeSemester;
+  const recentEnrollments = data.recentActivity?.recentEnrollments ?? [];
 
   const revenueChartData = [
-    { name: "Assessed Fees", amount: stats.revenue.totalAssessed },
     { name: "Collected (Stripe)", amount: stats.revenue.totalCollected },
     { name: "Outstanding Dues", amount: stats.revenue.totalOutstanding },
   ];
@@ -112,7 +118,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[10px] uppercase font-semibold text-indigo-200">Term Registration</p>
                 <p className="text-xs font-bold text-white flex items-center gap-1 justify-end">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>{activeSemester ? (activeSemester.isRegistrationOpen ? "WINDOW OPEN" : "WINDOW CLOSED") : semestersQuery.isError ? "TERM DATA UNAVAILABLE" : "NO ACTIVE TERM"}</span>
+                  <span>{activeSemester ? (activeSemester.isRegistrationOpen ? "WINDOW OPEN" : "WINDOW CLOSED") : "NO ACTIVE TERM"}</span>
                 </p>
               </div>
               <Link href="/admin/offerings">
@@ -253,33 +259,34 @@ export default function AdminDashboardPage() {
 
         {/* CHARTS ROW (RECHARTS) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Department Distribution Chart */}
+          {/* Latest registrations from the backend activity feed */}
           <Card className="border-slate-200/80 shadow-sm overflow-hidden">
             <CardHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40">
-              <CardTitle className="text-sm font-bold">Department Student Distribution</CardTitle>
+              <CardTitle className="text-sm font-bold">Recent Enrollments</CardTitle>
               <CardDescription className="text-xs">
-                Comparison of active enrolled students and catalog courses by academic department.
+                Latest course registrations recorded by the academic API.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.departmentDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                    <XAxis dataKey="name" fontSize={12} tickLine={false} />
-                    <YAxis fontSize={12} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "1px solid #e2e8f0",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Bar dataKey="students" name="Students" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="courses" name="Courses" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <CardContent className="space-y-3 pt-5">
+              {recentEnrollments.length === 0 ? (
+                <p className="py-12 text-center text-sm text-slate-500">No recent enrollments are available.</p>
+              ) : recentEnrollments.map((enrollment) => {
+                const studentName = [enrollment.student.profile?.firstName, enrollment.student.profile?.lastName]
+                  .filter(Boolean)
+                  .join(" ") || enrollment.student.email;
+
+                return (
+                  <div key={enrollment.id} className="flex flex-col gap-1 rounded-lg border border-slate-100 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{studentName}</p>
+                      <p className="truncate text-xs text-slate-500">{enrollment.section.offering.course.code} · {enrollment.section.offering.course.title}</p>
+                    </div>
+                    <time className="shrink-0 text-xs text-slate-500" dateTime={enrollment.enrolledAt}>
+                      {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                    </time>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
 

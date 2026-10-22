@@ -228,28 +228,32 @@ export interface PaymentRecord {
 }
 
 export interface AdminDashboardStats {
-  totalUsers: number;
-  totalStudents: number;
-  totalFaculties: number;
-  totalDepartments: number;
-  totalCourses: number;
-  totalEnrollments: number;
-  revenue: {
-    totalAssessed: number;
-    totalCollected: number;
-    totalOutstanding: number;
+  overview: {
+    totalStudents: number;
+    totalFaculty: number;
+    totalAdmins: number;
+    totalDepartments: number;
+    totalCourses: number;
+    totalEnrollments: number;
+    totalRevenueCollected: number;
+    totalOutstandingDue: number;
   };
-  departmentDistribution: {
-    name: string;
-    students: number;
-    courses: number;
-  }[];
-  recentEnrollments: {
-    id: string;
-    studentName: string;
-    courseTitle: string;
-    enrolledAt: string;
-  }[];
+  activeSemester: (Pick<AcademicSemester, "id" | "name" | "code" | "year" | "isRegistrationOpen">) | null;
+  recentActivity: {
+    recentEnrollments: {
+      id: string;
+      enrolledAt: string;
+      student: {
+        email: string;
+        profile?: { firstName: string; lastName: string; studentId?: string } | null;
+      };
+      section: {
+        sectionNumber: string;
+        offering: { course: { code: string; title: string } };
+      };
+    }[];
+    recentPayments: unknown[];
+  };
 }
 
 export interface ApiMeta {
